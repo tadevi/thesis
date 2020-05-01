@@ -1,0 +1,65 @@
+{
+    "name": "Fog Rule",
+    "rules": [
+        {
+            "data_type": "scalar",
+            "name": "gps",
+            "modules": [
+                {
+                    "name": "gps_preprocessing"
+                },
+                {
+                    "name": "gps_storage",
+                    "configs": {
+                        "db": "gps"
+                    }
+                }
+            ]
+        },
+        {
+            "data_type": "scalar",
+            "name": "water",
+            "modules": [
+                {
+                    "name": "gps_preprocessing"
+                },
+                {
+                    "name": "gps_storage",
+                    "configs": {
+                        "db": "gps"
+                    }
+                }
+            ]
+        },
+        {
+            "data_type": "stream",
+            "name": "traffic_stream",
+            "modules": [
+                {
+                    "name": "gps_preprocessing"
+                },
+                {
+                    "name": "gps_storage",
+                    "configs": {
+                        "db": "gps"
+                    }
+                }
+            ]
+        },
+        {
+            "data_type": "stream",
+            "name": "security_stream",
+            "modules": [
+                {
+                    "name": "gps_preprocessing"
+                },
+                {
+                    "name": "gps_storage",
+                    "configs": {
+                        "db": "gps"
+                    }
+                }
+            ]
+        }
+    ]
+}
