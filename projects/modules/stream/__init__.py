@@ -5,5 +5,5 @@ class Main(Base):
     def __init__(self, configs):
         self.configs = configs
 
-    def run(self, input):
-        super(Main, self).run(input)
+    def run(self, inputs):
+        super(Main, self).run(inputs)
