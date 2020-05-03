@@ -3,29 +3,38 @@ from importlib import import_module
 
 config_name = 'config/config.json'
 
+
 # parse_stream---> emit
 # process_stream : input -> output
 # send_stream -> input... ->stream
 
-def run(input):
-    with open(config_name, 'r') as f:
-        json_config = json.load(f)
+class RuleEngine:
+    def __init__(self):
+        self.modules = {}
 
-        for rule in json_config['rules']:
-            if rule['data_type'] == 'scalar':
-                value = input
-                for module in rule['modules']:
-                    module_call = import_module('.' + module['name'], module['package'])
-                    module_config = module.get('configs')
+    def getModule(self, name, package):
+        packageKey = package + '.' + name
+        if self.modules.get(packageKey) is None:
+            module = import_module('.' + name, package)
+            self.modules[packageKey] = module
+        return self.modules[packageKey]
 
-                    main = getattr(module_call, 'Main')
-                    if value is None:
-                        value = ''
-                    value = main(module_config).run(value)
-                return value
-            elif rule['data_type'] == 'stream':
-                # handle stream type
-                print('stream')
+    def run(self, input):
+        with open(config_name, 'r') as f:
+            json_config = json.load(f)
 
+            for rule in json_config['rules']:
+                if rule['data_type'] == 'scalar':
+                    value = input
+                    for module_define in rule['modules']:
+                        module = self.getModule(module_define['name'], module_define['package'])
+                        config = module_define.get('configs')
 
-run('abc')
+                        main = getattr(module, 'Main')
+                        if value is None:
+                            value = ''
+                        value = main(config).run(value)
+                    return value
+                elif rule['data_type'] == 'stream':
+                    # handle stream type
+                    print('stream')

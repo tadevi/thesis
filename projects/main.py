@@ -1,2 +1,3 @@
-import rule_engine
-rule_engine.run('abc')
+from rule_engine import RuleEngine
+
+RuleEngine().run('abc')
