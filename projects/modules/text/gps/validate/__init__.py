@@ -6,22 +6,22 @@
 # @input: received data from protocols with json format.
 # @configs: addition configs
 # Using import json to decode json input to python dictionary
-
-from modules.base import Base
 from datetime import datetime
+from typing import Dict
+
+from modules.base import Filter
 
 
-class Main(Base):
+class Main(Filter):
     def __init__(self, configs):
         self.configs = configs
 
-    def run(self, inputs):
-        super(Main, self).run(inputs)
+    def run(self, input: Dict):
+        super(Main, self).run(input)
         # code below
-        for gpsData in inputs:
-            if gpsData.longitude < -180 or gpsData.latitude > 180 or \
-                    gpsData.latitude < -90 or gpsData.latitude > 90 or \
-                    gpsData.speed < 0 or \
-                    gpsData.datetime > datetime.now():
-                inputs.remove(gpsData)
-        return inputs
+        result = False if (input["longitude"] < -180 or input["latitude"] > 180 or
+                           input["latitude"] < -90 or input["latitude"] > 90 or
+                           input["speed"] < 0 or
+                           input["datetime"] > datetime.now()) else True
+        print("Validate GPS: validated ", str(result), " for input ", input)
+        return result
