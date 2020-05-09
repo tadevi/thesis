@@ -1,39 +1,30 @@
 {
-    "name": "Fog Rule",
-    "rules": [
+  "name": "Fog Rule",
+  "rules": [
+    {
+      "data_type": "scalar",
+      "name": "gps",
+      "modules": [
         {
-            "data_type": "scalar",
-            "name": "gps",
-            "modules": [
-                {
-                    "package": "modules.text.gps",
-                    "name": "validate"
-                },
-                {
-                    "package": "modules.text.gps",
-                    "name": "storage",
-                    "configs": {
-                        "db": "gps"
-                    }
-                }
-            ]
+          "package": "modules.text.gps",
+          "name": "validate"
+        }
+      ]
+    },
+    {
+      "data_type": "stream",
+      "name": "traffic_camera",
+      "url": 0,
+      "modules": [
+        {
+          "package": "modules.image",
+          "name": "human_detection"
         },
         {
-            "data_type": "scalar",
-            "name": "water",
-            "modules": [
-                {
-                    "package": "modules.text.gps",
-                    "name": "validate"
-                },
-                {
-                    "package": "modules.text.gps",
-                    "name": "storage",
-                    "configs": {
-                        "db": "gps"
-                    }
-                }
-            ]
+          "package": "modules.stream",
+          "name": "mjpeg"
         }
-    ]
+      ]
+    }
+  ]
 }

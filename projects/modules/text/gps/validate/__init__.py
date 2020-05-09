@@ -21,7 +21,6 @@ class Main(Filter):
         # code below
         result = False if (input["longitude"] < -180 or input["latitude"] > 180 or
                            input["latitude"] < -90 or input["latitude"] > 90 or
-                           input["speed"] < 0 or
-                           input["datetime"] > datetime.now()) else True
+                           input["speed"] < 0) else True
         print("Validate GPS: validated ", str(result), " for input ", input)
         return result

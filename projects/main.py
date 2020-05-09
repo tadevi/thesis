@@ -1,5 +1,3 @@
-# import rule_engine
-# rule_engine.run('abc')
-import test
+from protocols.http import make_web
 
-test.run()
+make_web()
