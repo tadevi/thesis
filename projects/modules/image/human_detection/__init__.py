@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from modules.base import Filter
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 graph_path = os.path.join(parent_folder_path, "frozen_inference_graph.pb")
@@ -48,6 +48,9 @@ detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
 detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
+tag = "Human detection:"
+print(tag, "loaded graph")
+
 
 class Main(Filter):
     def __init__(self, configs):
@@ -72,6 +75,7 @@ class Main(Filter):
         df7 = df6.loc[df6['scores'] > 0.50]
 
         people_count = int(len(df7.index)) if int(len(df7.index)) > 0 else 0
-        print("Human detection: detected ", people_count, " people in ",
-              "{:.2f}".format((end_time - start_time) * 1000), " ms")
+        if people_count > 0:
+            print(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) detected", people_count,
+                  "people")
         return True if people_count > 0 else False
