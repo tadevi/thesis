@@ -1,41 +1,37 @@
 import json
-import traceback
-from importlib import import_module
-import os
+
+from rule_engine.HandleScalar import HandleScalar
+from rule_engine.HandleStream import HandleStream
+from rule_engine.UrlToStream import UrlToStream
 
 config_name = 'config/config.json'
 
 
-# parse_stream---> emit
-# process_stream : input -> output
-# send_stream -> input... ->stream
-
-def handle_scalar(inputs, modules):
-    value = inputs
-    for module in modules:
-        module_call = import_module('.' + module['name'], module['package'])
-        module_config = module.get('configs')
-
-        main = getattr(module_call, 'Main')
-        if value is None:
-            value = ''
-        value = main(module_config).run(value)
-    return value
-
-
-def handle_stream(inputs, modules):
-    print("Handle stream")
-
-
-def run(inputs):
+def lookup_rule(input):
     with open(config_name, 'r') as f:
         json_config = json.load(f)
-        for rule in json_config['rules']:
-            if os.fork() == 0:
+        rules = json_config['rules']
+        rules = list(filter(lambda x: x['name'] == input['name'], rules))
+        if not len(rules) == 1:
+            return "Rule for this type not found!"
+        return {
+            **rules[0],
+            **input
+        }
+
+
+class RuleEngine:
+    def __init__(self):
+        pass
+
+    def run(self, inputs):
+        with open(config_name, 'r') as f:
+            json_config = json.load(f)
+            for rule in json_config['rules']:
                 try:
                     if rule['data_type'] == 'scalar':
-                        handle_scalar(inputs, rule['modules'])
+                        HandleScalar(rule['modules']).run(inputs)
                     elif rule['data_type'] == 'stream':
-                        handle_stream(inputs, rule['modules'])
+                        HandleStream(rule['modules']).run()
                 except:
                     pass  # traceback.print_exc()

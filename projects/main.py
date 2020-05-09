@@ -1,1 +1,3 @@
-from modules.stream import output
+from protocols.http import make_web
+
+make_web()

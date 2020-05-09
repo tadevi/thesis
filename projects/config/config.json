@@ -8,40 +8,21 @@
         {
           "package": "modules.text.gps",
           "name": "validate"
-        },
-        {
-          "package": "modules.text.gps",
-          "name": "storage",
-          "configs": {
-            "db": "gps"
-          }
-        }
-      ]
-    },
-    {
-      "data_type": "scalar",
-      "name": "water",
-      "modules": [
-        {
-          "package": "modules.text.gps",
-          "name": "validate"
-        },
-        {
-          "package": "modules.text.gps",
-          "name": "storage",
-          "configs": {
-            "db": "gps"
-          }
         }
       ]
     },
     {
       "data_type": "stream",
       "name": "traffic_camera",
+      "url": 0,
       "modules": [
         {
+          "package": "modules.image",
+          "name": "human_detection"
+        },
+        {
           "package": "modules.stream",
-          "name": "rtsp"
+          "name": "mjpeg"
         }
       ]
     }
