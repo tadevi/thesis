@@ -1,3 +1,4 @@
-from protocols.http import make_web
+import test
 
-make_web()
+# make_web()
+test.run()
