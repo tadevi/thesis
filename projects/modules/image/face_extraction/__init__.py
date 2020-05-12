@@ -5,8 +5,9 @@ import face_recognition
 from numpy.core.multiarray import ndarray
 
 from modules.base import Map
+from modules.utils import log
 
-tag = "Face extraction:"
+tag = "Face extraction"
 
 
 class Main(Map):
@@ -19,7 +20,7 @@ class Main(Map):
         face_locations = face_recognition.face_locations(input)
         end_time = time.time()
 
-        # if len(face_locations) > 0:
-        #     print(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) extracted", len(face_locations),
-        #           "faces")
+        if len(face_locations) > 0:
+            log.v(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) extracted", len(face_locations),
+                  "faces")
         return face_locations

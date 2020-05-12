@@ -2,17 +2,22 @@ import os
 
 import cv2
 
-from modules.utils import current_milli_time
+from modules import utils
+from modules.utils import log
+
+tag = "Test"
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 data_folder_path = os.path.join(parent_folder_path, "data")
 
 
 def run():
+    log.mode(log.LOG_MODE_INFO)
+
     # test_validate_and_storage()
     # test_human_detection()
-    test_camera_flow()
-    # test_network()
+    # test_camera_flow()
+    test_network()
     # test_cv2()
 
 
@@ -67,7 +72,7 @@ def test_human_detection():
 
     human_detection = human_detection.Main({})
 
-    print("start running human detection")
+    log.i(tag, "start running human detection")
 
     cap = cv2.VideoCapture(0)
     ret, input = cap.read()
@@ -126,13 +131,13 @@ def test_camera_flow():
         # update appearing list and insert new record to db if anyone disappear for at least 5s
         ids_to_remove = []
         for id, people in appearing_people.items():
-            current_time = current_milli_time()
+            current_time = utils.current_milli_time()
             if id not in profiles:
                 end_time = people.get("end_time")
                 if end_time is not None:
                     if current_time - end_time > 5000:
                         new_record = people
-                        print("New record:", new_record)
+                        log.i(tag, "New record:", new_record)
 
                         # insert record to database
                         storage_module.run(new_record)
@@ -150,7 +155,7 @@ def test_camera_flow():
                 appearing_people[id] = {
                     "id": id,
                     "name": profile["name"],
-                    "start_time": current_milli_time()
+                    "start_time": utils.current_milli_time()
                 }
 
         # Display result
@@ -185,18 +190,32 @@ def display_result(frame, face_locations, face_names):
 
 
 def test_network():
+    from protocols.http import make_web
+    import threading
+
+    t = threading.Thread(target=make_web)
+    t.daemon = True
+    t.start()
+
     from modules import network
     network_module = network.Main({})
 
+    is_post = True
+
     while True:
-        input("Press Enter to send POST\n")
-        network_module.post("http://localhost:3000/iot",
-                            {
-                                "name": "gps",
-                                "data": {
-                                    "longitude": 180,
-                                    "latitude": 60,
-                                    "speed": 40,
-                                    "datetime": current_milli_time()
-                                }
-                            })
+        if is_post:
+            input("Press Enter to send POST\n")
+            network_module.post("http://localhost:3000/iot",
+                                {
+                                    "name": "gps",
+                                    "data": {
+                                        "longitude": 180,
+                                        "latitude": 60,
+                                        "speed": 40,
+                                        "datetime": utils.current_milli_time()
+                                    }
+                                })
+        else:
+            input("Press Enter to send GET\n")
+            network_module.get("http://localhost:3000/video")
+        is_post = not is_post

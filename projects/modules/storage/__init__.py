@@ -8,6 +8,7 @@ from typing import Dict
 import pymongo
 
 from modules.base import Base
+from modules.utils import log
 
 DEFAULT_MONGO_URL = "mongodb+srv://tai_than:tai_than123456@cluster0-osct2.mongodb.net/test?retryWrites=true&w=majority"
 DEFAULT_MONGO_DB = "iot-db"
@@ -15,6 +16,8 @@ DEFAULT_MONGO_COLLECTION = "test"
 
 # mongo clients cache
 mongo_clients = {}
+
+tag = "Storage"
 
 
 class Main(Base):
@@ -37,4 +40,4 @@ class Main(Base):
 
     def run(self, input: Dict):
         self.collection.insert_one(input)
-        print("Storage: stored input ", input)
+        log.i(tag, "stored input", input)

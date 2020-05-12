@@ -9,6 +9,9 @@
 from typing import Dict
 
 from modules.base import Filter
+from modules.utils import log
+
+tag = "Validate GPS"
 
 
 class Main(Filter):
@@ -16,8 +19,6 @@ class Main(Filter):
         self.configs = configs
 
     def run(self, input: Dict):
-        super(Main, self).run(input)
-        # code below
         longitude = input.get("longitude")
         latitude = input.get("latitude")
         speed = input.get("speed")
@@ -27,5 +28,5 @@ class Main(Filter):
                            longitude < -180 or longitude > 180 or
                            latitude < -90 or latitude > 90 or
                            speed < 0) else True
-        print("Validate GPS: validated ", str(result), " for input ", input)
+        log.i(tag, "validated", result, "for input", input)
         return result

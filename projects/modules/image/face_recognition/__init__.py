@@ -5,11 +5,11 @@ from typing import Dict
 import face_recognition
 import pymongo
 
-import cv2
 import numpy as np
 
 from modules.base import Map
 from modules.storage import DEFAULT_MONGO_URL, DEFAULT_MONGO_DB
+from modules.utils import log
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 face_storage_path = os.path.join(parent_folder_path, "face_db")
@@ -28,8 +28,8 @@ for profile in cursor:
     face_array = face_recognition.load_image_file(face_path)
     known_face_encodings.append(face_recognition.face_encodings(face_array)[0])
 
-tag = "Face recognition:"
-print(tag, "loaded all", len(known_face_encodings), "known faces")
+tag = "Face recognition"
+log.i(tag, "loaded all", len(known_face_encodings), "known faces")
 
 
 class Main(Map):
@@ -54,15 +54,10 @@ class Main(Map):
         face_names = []
 
         for face_encoding in face_encodings:
-            results = face_recognition.compare_faces(known_face_encodings, face_encoding)
-            # match_indices = [i for i, x in enumerate(results) if x]
-            # for i in match_indices:
-            #     recognized_profile_indices.add(i)
-            # if len(match_indices) == 0:
-            #     unrecognized_people_count += 1
+            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
             face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
             best_match_index = int(np.argmin(face_distances))
-            if results[best_match_index]:
+            if matches[best_match_index]:
                 name = profiles[best_match_index]["name"]
                 recognized_profile_indices.add(best_match_index)
             else:
@@ -72,10 +67,10 @@ class Main(Map):
         recognized_profiles = {profiles[i]["id"]: profiles[i] for i in recognized_profile_indices}
         end_time = time.time()
 
-        # print(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) recognized", len(recognized_profiles),
-        #       "people:",
-        #       [profile["name"] for profile_id, profile in recognized_profiles.items()])
-        # if unrecognized_people_count > 0:
-        #     print(tag, "(WARNING)", unrecognized_people_count, "people not recognized")
+        log.v(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) recognized", len(recognized_profiles),
+              "people:",
+              [profile["name"] for profile_id, profile in recognized_profiles.items()])
+        if unrecognized_people_count > 0:
+            log.v(tag, "(WARNING)", unrecognized_people_count, "people not recognized")
 
         return recognized_profiles, face_names

@@ -6,6 +6,7 @@ import pandas as pd
 import tensorflow as tf
 
 from modules.base import Filter
+from modules.utils import log
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 graph_path = os.path.join(parent_folder_path, "frozen_inference_graph.pb")
@@ -18,10 +19,10 @@ with detection_graph.as_default():
         od_graph_def.ParseFromString(serialized_graph)
         tf.import_graph_def(od_graph_def, name='')
 
-# config = tf.compat.v1.ConfigProto()
-# config.gpu_options.allow_growth = True
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
 sess = tf.compat.v1.Session(
-    # config=config,
+    config=config,
     graph=detection_graph)
 
 image_tensor = detection_graph.get_tensor_by_name('image_tensor:0')
@@ -33,8 +34,8 @@ detection_scores = detection_graph.get_tensor_by_name('detection_scores:0')
 detection_classes = detection_graph.get_tensor_by_name('detection_classes:0')
 num_detections = detection_graph.get_tensor_by_name('num_detections:0')
 
-tag = "Human detection:"
-print(tag, "loaded graph")
+tag = "Human detection"
+log.i(tag, "loaded graph")
 
 
 class Main(Filter):
@@ -60,7 +61,7 @@ class Main(Filter):
         df7 = df6.loc[df6['scores'] > 0.50]
 
         people_count = int(len(df7.index)) if int(len(df7.index)) > 0 else 0
-        # if people_count > 0:
-        #     print(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) detected", people_count,
-        #           "people")
+        if people_count > 0:
+            log.v(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) detected", people_count,
+                  "people")
         return True if people_count > 0 else False
