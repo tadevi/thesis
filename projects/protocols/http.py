@@ -1,15 +1,21 @@
 from threading import Thread
 
-import cv2
+from cv2 import cv2
 from flask import *
 
 from rule_engine import HandleStream, lookup_rule, HandleScalar
 
+channel = {}
+
+
+def add_to_channel(channel_id, queue):
+    channel[channel_id] = queue
+
 
 def make_web():
-    app = Flask(__name__, template_folder='.')
+    _app = Flask(__name__, template_folder='.')
 
-    @app.route('/')
+    @_app.route('/')
     def index():
         return render_template('index.html')
 
@@ -22,7 +28,7 @@ def make_web():
     }
     '''
 
-    @app.route('/stream/', methods=['POST'])
+    @_app.route('/stream/', methods=['POST'])
     def stream():
         data = request.json
         configs = lookup_rule(data)
@@ -41,7 +47,7 @@ def make_web():
     }
     '''
 
-    @app.route('/iot/', methods=['POST'])
+    @_app.route('/iot/', methods=['POST'])
     def iot_data():
         data = request.json
         configs = {
@@ -61,15 +67,33 @@ def make_web():
                 "status": "success"
             }
 
-    @app.route('/video')
+    def emitFrame(frame):
+        _, frame = cv2.imencode('.JPEG', frame)
+        return (b'--frame\r\n'
+                b'Content-Type: image/jpeg\r\n\r\n' + frame.tostring() + b'\r\n')
+
+    def gen(channel_id):
+        queue = channel[channel_id]
+        while True:
+            frame = queue.get()
+            yield emitFrame(frame)
+
+    @_app.route('/video')
     def video():
-        id=request.args.get('id')
-        return {
-            "status":"success",
-            "id": id
-        }
+        channel_id = request.args.get('id')
+        if not (channel.get(id) is None):
+            return {
+                "status": "success",
+                "message": "Resource not found!"
+            }
+        return Response(gen(channel_id),
+                        mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    @_app.route('/services')
+    def services():
+        pass
 
     try:
-        app.run(host='localhost', port=3000, threaded=True)
+        _app.run(host='localhost', port=3000, threaded=True)
     except:
         print('unable to open port')
