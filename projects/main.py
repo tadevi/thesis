@@ -1,4 +1,3 @@
-import test
+from server.http import make_web
 
-# make_web()
-test.run()
+make_web()

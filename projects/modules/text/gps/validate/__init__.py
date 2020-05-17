@@ -3,7 +3,7 @@
 # Format data to the specified format to send to other modules
 #
 # This module should have def run(input, configs)
-# @input: received data from protocols with json format.
+# @input: received data from server with json format.
 # @configs: addition configs
 # Using import json to decode json input to python dictionary
 from typing import Dict
