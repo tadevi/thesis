@@ -1,5 +1,10 @@
 {
-  "name": "Fog Rule",
+  "meta": {
+    "name": "Cloud",
+    "layer": 3,
+    "storage": 20000,
+    "url": "http://google.com"
+  },
   "rules": [
     {
       "data_type": "scalar",
@@ -8,23 +13,43 @@
         {
           "package": "modules.text.gps",
           "name": "validate"
+        },
+        {
+          "package": "modules",
+          "name": "storage",
+          "configs": {
+            "mongo_url": "mongodb://localhost:27017/",
+            "db_name": "iot-db",
+            "col_name": "gps"
+          }
         }
       ]
     },
     {
       "data_type": "stream",
       "name": "traffic_camera",
-      "url": 0,
       "modules": [
         {
           "package": "modules.image",
-          "name": "human_detection"
-        },
-        {
-          "package": "modules.stream",
-          "name": "mjpeg"
+          "name": "face_recognition",
+          "configs": {
+            "mongo_url": "mongodb://localhost:27017/",
+            "db_name": "iot-db",
+            "col_name": "appearance"
+          }
         }
       ]
     }
-  ]
+  ],
+  "start_up": [
+    {
+      "name": "traffic_camera",
+      "camera_id": "12345",
+      "url": 0
+    }
+  ],
+  "database": {
+    "mongo_url": "mongodb://localhost:27017/",
+    "db_name": "iot-db"
+  }
 }
