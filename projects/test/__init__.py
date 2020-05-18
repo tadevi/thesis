@@ -4,6 +4,7 @@ import cv2
 
 from modules import utils
 from modules.utils import log
+from protocols.http import make_web
 
 tag = "Test"
 
@@ -12,13 +13,12 @@ data_folder_path = os.path.join(parent_folder_path, "data")
 
 
 def run():
-    log.mode(log.LOG_MODE_INFO)
+    log.mode(log.LOG_MODE_VERBOSE)
 
     # test_validate_and_storage()
     # test_human_detection()
     # test_camera_flow()
-    test_network()
-    # test_cv2()
+    test_stream_flow()
 
 
 def test_validate_and_storage():
@@ -82,28 +82,107 @@ def test_human_detection():
         ret, input = cap.read()
 
 
+# def test_camera_flow():
+#     import modules.image.human_detection as human_detection_pkg
+#     import modules.image.face_recognition as face_recognition_pkg
+#     import modules.image.face_extraction as face_extraction_pkg
+#     import modules.storage as storage_pkg
+#     import numpy as np
+#
+#     human_detection_module = human_detection_pkg.Main({})
+#     face_extraction_module = face_extraction_pkg.Main({})
+#     face_recognition_module = face_recognition_pkg.Main({})
+#     storage_module = storage_pkg.Main({"collection_name": "appearance"})
+#
+#     cap = cv2.VideoCapture(0)
+#     ret, frame = cap.read()
+#
+#     # format:
+#     # {
+#     #     "id": ...,
+#     #     "name": ...,
+#     #     "start_time":... (ms from epoch)
+#     # }
+#     appearing_people = {}
+#
+#     while frame is not None:
+#         # Resize frame of video to 1/4 size for faster face recognition processing
+#         input = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+#
+#         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
+#         input = np.array(input[:, :, ::-1])
+#
+#         face_names = []
+#
+#         if human_detection_module.run(input):
+#             face_locations = face_extraction_module.run(input)
+#             if len(face_locations) > 0:
+#                 face_recognition_input = {
+#                     "frame": input,
+#                     "face_locations": face_locations
+#                 }
+#                 profiles, face_names = face_recognition_module.run(face_recognition_input)
+#             else:
+#                 profiles = {}
+#         else:
+#             face_locations = []
+#             profiles = {}
+#
+#         # update appearing list and insert new record to db if anyone disappear for at least 5s
+#         ids_to_remove = []
+#         for id, people in appearing_people.items():
+#             current_time = utils.current_milli_time()
+#             if id not in profiles:
+#                 end_time = people.get("end_time")
+#                 if end_time is not None:
+#                     if current_time - end_time > 5000:
+#                         new_record = people
+#                         log.i(tag, "New record:", new_record)
+#
+#                         # insert record to database
+#                         storage_module.run(new_record)
+#
+#                         ids_to_remove.append(id)
+#                 else:
+#                     people["end_time"] = current_time
+#             else:
+#                 people["end_time"] = None
+#
+#         for id in ids_to_remove:
+#             appearing_people.pop(id, None)
+#         for id, profile in profiles.items():
+#             if id not in appearing_people:
+#                 appearing_people[id] = {
+#                     "id": id,
+#                     "name": profile["name"],
+#                     "start_time": utils.current_milli_time()
+#                 }
+#
+#         # Display result
+#         display_result(frame, face_locations, face_names)
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+#
+#         ret, frame = cap.read()
+#
+#     cap.release()
+#     cv2.destroyAllWindows()
+
+
 def test_camera_flow():
     import modules.image.human_detection as human_detection_pkg
     import modules.image.face_recognition as face_recognition_pkg
     import modules.image.face_extraction as face_extraction_pkg
-    import modules.storage as storage_pkg
     import numpy as np
 
     human_detection_module = human_detection_pkg.Main({})
     face_extraction_module = face_extraction_pkg.Main({})
-    face_recognition_module = face_recognition_pkg.Main({})
-    storage_module = storage_pkg.Main({"collection_name": "appearance"})
+    face_recognition_module = face_recognition_pkg.Main({
+        "col_name": "appearance"
+    })
 
     cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
-
-    # format:
-    # {
-    #     "id": ...,
-    #     "name": ...,
-    #     "start_time":... (ms from epoch)
-    # }
-    appearing_people = {}
 
     while frame is not None:
         # Resize frame of video to 1/4 size for faster face recognition processing
@@ -112,56 +191,8 @@ def test_camera_flow():
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         input = np.array(input[:, :, ::-1])
 
-        face_names = []
-
-        if human_detection_module.run(input):
-            face_locations = face_extraction_module.run(input)
-            if len(face_locations) > 0:
-                face_recognition_input = {
-                    "frame": input,
-                    "face_locations": face_locations
-                }
-                profiles, face_names = face_recognition_module.run(face_recognition_input)
-            else:
-                profiles = {}
-        else:
-            face_locations = []
-            profiles = {}
-
-        # update appearing list and insert new record to db if anyone disappear for at least 5s
-        ids_to_remove = []
-        for id, people in appearing_people.items():
-            current_time = utils.current_milli_time()
-            if id not in profiles:
-                end_time = people.get("end_time")
-                if end_time is not None:
-                    if current_time - end_time > 5000:
-                        new_record = people
-                        log.i(tag, "New record:", new_record)
-
-                        # insert record to database
-                        storage_module.run(new_record)
-
-                        ids_to_remove.append(id)
-                else:
-                    people["end_time"] = current_time
-            else:
-                people["end_time"] = None
-
-        for id in ids_to_remove:
-            appearing_people.pop(id, None)
-        for id, profile in profiles.items():
-            if id not in appearing_people:
-                appearing_people[id] = {
-                    "id": id,
-                    "name": profile["name"],
-                    "start_time": utils.current_milli_time()
-                }
-
-        # Display result
-        display_result(frame, face_locations, face_names)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if human_detection_module.run(input) and face_extraction_module.run(input):
+            face_recognition_module.run(input)
 
         ret, frame = cap.read()
 
@@ -169,9 +200,10 @@ def test_camera_flow():
     cv2.destroyAllWindows()
 
 
-def display_result(frame, face_locations, face_names):
+def display_result(frame, face_locations: list):
     # Display the results
-    for (top, right, bottom, left), name in zip(face_locations, face_names):
+    # for (top, right, bottom, left), name in zip(face_locations, face_names):
+    for (top, right, bottom, left) in face_locations:
         # Scale back up face locations since the frame we detected in was scaled to 1/4 size
         top *= 4
         right *= 4
@@ -184,12 +216,12 @@ def display_result(frame, face_locations, face_names):
         # Draw a label with a name below the face
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+        # cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
     cv2.imshow('Video', frame)
 
 
-def test_network():
+def test_gps_flow():
     from protocols.http import make_web
     import threading
 
@@ -219,3 +251,91 @@ def test_network():
             input("Press Enter to send GET\n")
             network_module.get("http://localhost:3000/video")
         is_post = not is_post
+
+
+def stream_url_from_youtube(url):
+    import pafy
+    vPafy = pafy.new(url)
+    play = vPafy.getbest(preftype="webm", ftypestrict=False)
+    return play.url
+
+    # start the video
+    # cap = cv2.VideoCapture(play.url)
+    # while True:
+    #     ret, frame = cap.read()
+    #     """
+    #     your code here
+    #     """
+    #     cv2.imshow('frame', frame)
+    #     if cv2.waitKey(20) & 0xFF == ord('q'):
+    #         break
+    #
+    # cap.release()
+    # cv2.destroyAllWindows()
+
+
+def test_camera():
+    from modules import network
+    network_module = network.Main({})
+
+    url = stream_url_from_youtube('https://www.youtube.com/watch?v=bMt47wvK6u0')
+
+    input("Press Enter to POST device info to fog1\n")
+    network_module.post("http://localhost:3000/stream",
+                        {
+                            "name": "traffic_camera",
+                            "url": url
+                        })
+
+
+def test_fog_1():
+    from protocols.http import make_web
+
+    make_web()
+
+
+def test_fog_2():
+    from modules.stream import mjpeg
+
+    mjpeg_module = mjpeg.Main({})
+    mjpeg_module.make_server()
+
+
+def test_cloud():
+    from modules.stream import mjpeg
+
+    mjpeg_module = mjpeg.Main({})
+    mjpeg_module.make_server()
+
+
+def test_stream_flow():
+    import threading
+
+    url = 0  # stream_url_from_youtube('https://www.youtube.com/watch?v=bMt47wvK6u0')
+
+    t1 = threading.Thread(target=make_web)
+    t1.daemon = True
+    t1.start()
+
+    from modules import network
+    network_module = network.Main({})
+
+    input("Press Enter to send POST\n")
+
+    t2 = threading.Thread(target=network_module.post, args=("http://localhost:3000/stream",
+                                                            {
+                                                                "name": "traffic_camera",
+                                                                "url": url
+                                                            }
+                                                            ))
+    t2.daemon = True
+    t2.start()
+
+    t1.join()
+    t2.join()
+
+    # network_module.post("http://localhost:3000/stream",
+    #                     {
+    #                         "name": "traffic_camera",
+    #                         "url": url
+    #                     })

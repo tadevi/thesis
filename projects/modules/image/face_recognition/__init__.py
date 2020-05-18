@@ -1,15 +1,18 @@
 import os
 import time
-from typing import Dict
+from threading import Timer
+import cv2
 
 import face_recognition
 import pymongo
 
 import numpy as np
 
+from modules import utils
 from modules.base import Map
 from modules.storage import DEFAULT_MONGO_URL, DEFAULT_MONGO_DB
 from modules.utils import log
+from modules import storage
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 face_storage_path = os.path.join(parent_folder_path, "face_db")
@@ -33,21 +36,27 @@ log.i(tag, "loaded all", len(known_face_encodings), "known faces")
 
 
 class Main(Map):
-    def __init__(self, configs):
+    def __init__(self, configs:dict):
         self.configs = configs
+        # format:
+        # {
+        #     "id"
+        #     "name"
+        #     "start_time" (ms from epoch)
+        # }
+        self.appearing_people = {}
+        self.timers = {}
+        self.storage = storage.Main({
+            "mongo_url": configs.get("mongo_url"),
+            "db_name": configs.get("db_name"),
+            "col_name": configs.get("col_name"),
+        })
 
-    # input:
-    # {
-    #     frame: ndarray,
-    #     face_locations: list
-    # }
-    def run(self, input: Dict) -> (Dict[str, Dict], list):
+    def run(self, input: np.ndarray):
         start_time = time.time()
 
-        frame = input["frame"]
-        face_locations = input["face_locations"]
-
-        face_encodings = face_recognition.face_encodings(frame, face_locations)
+        face_locations = face_recognition.face_locations(input)
+        face_encodings = face_recognition.face_encodings(input, face_locations)
 
         unrecognized_people_count = 0
         recognized_profile_indices = set()
@@ -73,4 +82,50 @@ class Main(Map):
         if unrecognized_people_count > 0:
             log.v(tag, "(WARNING)", unrecognized_people_count, "people not recognized")
 
-        return recognized_profiles, face_names
+        self.store_records(recognized_profiles)
+        display_result(input, face_locations, face_names)
+
+    def store_records(self, profiles: dict):
+        for id, profile in profiles.items():
+            if id not in self.appearing_people:
+                self.appearing_people[id] = {
+                    "id": id,
+                    "name": profile["name"],
+                    "start_time": utils.current_milli_time()
+                }
+
+            timer = self.timers.get(id)
+            if timer is not None:
+                timer.cancel()
+
+            people = self.appearing_people[id]
+            people["end_time"] = utils.current_milli_time()
+            timer = Timer(5, self.store_record, args=(people,))
+            self.timers[id] = timer
+            timer.start()
+
+    def store_record(self, record):
+        self.storage.run(record)
+        self.appearing_people.pop(record["id"], None)
+
+
+def display_result(frame, face_locations: list, face_names):
+    # Display the results
+    for (top, right, bottom, left), name in zip(face_locations, face_names):
+        # Scale back up face locations since the frame we detected in was scaled to 1/4 size
+        # top *= 4
+        # right *= 4
+        # bottom *= 4
+        # left *= 4
+
+        # Draw a box around the face
+        cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+
+        # Draw a label with a name below the face
+        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+        font = cv2.FONT_HERSHEY_DUPLEX
+        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+
+    cv2.imshow('Video', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        cv2.destroyAllWindows()

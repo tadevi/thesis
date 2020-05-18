@@ -24,20 +24,30 @@ class Main(Base):
     # configs should at least have "collection_name"
     def __init__(self, configs: Dict):
         self.configs = configs
-        if "mongo_url" not in self.configs:
+        if self.configs.get("mongo_url") is None:
             self.configs["mongo_url"] = DEFAULT_MONGO_URL
-        if "db_name" not in self.configs:
+        if self.configs.get("db_name") is None:
             self.configs["db_name"] = DEFAULT_MONGO_DB
-        if "collection_name" not in self.configs:
-            self.configs["collection_name"] = DEFAULT_MONGO_COLLECTION
+        if self.configs.get("col_name") is None:
+            self.configs["col_name"] = DEFAULT_MONGO_COLLECTION
         mongo_url = self.configs.get("mongo_url")
         self.mongo_client = mongo_clients.get(mongo_url)
         if self.mongo_client is None:
             self.mongo_client = pymongo.MongoClient(mongo_url)
             mongo_clients[mongo_url] = self.mongo_client
         db = self.mongo_client[self.configs["db_name"]]
-        self.collection = db[self.configs["collection_name"]]
+        self.collection = db[self.configs["col_name"]]
 
-    def run(self, input: Dict):
-        self.collection.insert_one(input)
-        log.i(tag, "stored input", input)
+    def run(self, input):
+        try:
+            if isinstance(input, list):
+                if len(input) > 0:
+                    self.collection.insert_many(input)
+                else:
+                    return
+            else:
+                self.collection.insert_one(input)
+            log.i(tag, "stored input", input, "\nin mongo url:", self.configs['mongo_url'], ", db:",
+                  self.configs['db_name'], ", collection:", self.configs['col_name'])
+        except:
+            pass

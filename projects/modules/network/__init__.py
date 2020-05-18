@@ -25,6 +25,10 @@ class Main(Base):
         else:
             log.i(tag, "POST fail to url", url, "\nwith data", json, "status code:", response.status_code, ", reason:",
                   response.reason)
+        return {
+            "status_code": response.status_code,
+            "message": response.reason
+        }
 
     def get(self, url, params=None) -> dict:
         response = requests.get(url, params=params)

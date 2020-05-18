@@ -1,5 +1,10 @@
 {
-  "name": "Fog Rule",
+  "meta": {
+    "name": "Fog 1-1",
+    "layer": 1,
+    "storage": 1000,
+    "url": "http://google.com"
+  },
   "rules": [
     {
       "data_type": "scalar",
@@ -8,13 +13,21 @@
         {
           "package": "modules.text.gps",
           "name": "validate"
+        },
+        {
+          "package": "modules",
+          "name": "storage",
+          "configs": {
+            "mongo_url": "mongodb://localhost:27017/",
+            "db_name": "iot-db",
+            "col_name": "gps"
+          }
         }
       ]
     },
     {
       "data_type": "stream",
       "name": "traffic_camera",
-      "url": 0,
       "modules": [
         {
           "package": "modules.image",
@@ -25,6 +38,13 @@
           "name": "mjpeg"
         }
       ]
+    }
+  ],
+  "start_up": [
+    {
+      "name": "traffic_camera",
+      "camera_id": "12345",
+      "url": 0
     }
   ]
 }

@@ -25,7 +25,7 @@ def make_web(generator):
         return Response(gen(),
                         mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    @app.route('video?id=<id>')
+    @app.route('/video?id=<id>')
     def video(id):
         return {
             "status":"success",
