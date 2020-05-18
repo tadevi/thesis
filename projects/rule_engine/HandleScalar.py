@@ -5,8 +5,8 @@ from modules.base import Filter, Map
 
 def __getModule__(module):
     configs = {}
-    if not module.get('config') is None:
-        configs = module['config']
+    if not module.get('configs') is None:
+        configs = module['configs']
     call = import_module('.' + module['name'], module['package'])
     main = getattr(call, 'Main')
     return {
@@ -29,5 +29,5 @@ class HandleScalar:
             elif isinstance(module['main'], Map):
                 value = module['main'].run(value)
             else:
-                break
+                module['main'].run(value)
         return value

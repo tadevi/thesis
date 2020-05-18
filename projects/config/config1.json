@@ -1,8 +1,8 @@
 {
   "meta": {
-    "name": "Cloud",
-    "layer": 3,
-    "storage": 20000,
+    "name": "Fog 1-1",
+    "layer": 1,
+    "storage": 1000,
     "url": "http://google.com"
   },
   "rules": [

@@ -40,4 +40,4 @@ class HandleStream:
                 elif isinstance(module['main'], Map):
                     frame = module['main'].run(frame)
                 else:
-                    break
+                    module['main'].run(frame)
