@@ -20,19 +20,20 @@ class Main(Base):
 
     def post(self, url, json):
         response = requests.post(url, json=json)
-        if response.status_code == 200:
-            log.i(tag, "POST success to url", url, "\nwith data", json)
-        else:
-            log.i(tag, "POST fail to url", url, "\nwith data", json, "status code:", response.status_code, ", reason:",
-                  response.reason)
+        log.i(tag, "POST to url", url, "\nwith data", json, "\nstatus code:", response.status_code, "\nreason:",
+              response.reason)
+        return {
+            "status_code": response.status_code,
+            "message": response.reason
+        }
 
     def get(self, url, params=None) -> dict:
         response = requests.get(url, params=params)
-        if response.status_code == 200:
-            json = response.json()
-            log.i(tag, "GET success from url", url, "\nwith result", json)
-        else:
-            json = {}
-            log.i(tag, "GET fail from url", url, "\nwith status code:", response.status_code, ", reason:",
-                  response.reason)
-        return json
+        json = response.json()
+        log.i(tag, "GET from url", url, "\nwith params:", params, "\nstatus code:", response.status_code, "\nreason:",
+              response.reason, "\njson:", json)
+        return {
+            "status_code": response.status_code,
+            "message": response.reason,
+            "data": json
+        }
