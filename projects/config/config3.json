@@ -47,5 +47,9 @@
       "camera_id": "12345",
       "url": 0
     }
-  ]
+  ],
+  "database": {
+    "mongo_url": "mongodb://localhost:27017/",
+    "db_name": "iot-db"
+  }
 }
