@@ -101,7 +101,7 @@ def test_camera_flow():
 
     while frame is not None:
         # Resize frame of video to 1/4 size for faster face recognition processing
-        input = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+        input = cv2.resize(frame, (0, 0), fx=0.5, fy=0.5)
 
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         input = np.array(input[:, :, ::-1])
@@ -109,6 +109,9 @@ def test_camera_flow():
         if human_detection_module.run(input) and face_extraction_module.run(input):
             face_recognition_module.run(input)
 
+        cv2.imshow('Video', input)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
         ret, frame = cap.read()
 
     cap.release()

@@ -1,4 +1,6 @@
 import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 import time
 from threading import Timer
 import cv2
@@ -83,7 +85,7 @@ class Main(Map):
             log.v(tag, "(WARNING)", unrecognized_people_count, "people not recognized")
 
         self.store_records(recognized_profiles)
-        display_result(input, face_locations, face_names)
+        draw_result_on_frame(input, face_locations, face_names)
 
     def store_records(self, profiles: dict):
         for id, profile in profiles.items():
@@ -109,7 +111,7 @@ class Main(Map):
         self.appearing_people.pop(record["id"], None)
 
 
-def display_result(frame, face_locations: list, face_names):
+def draw_result_on_frame(frame, face_locations: list, face_names):
     # Display the results
     for (top, right, bottom, left), name in zip(face_locations, face_names):
         # Scale back up face locations since the frame we detected in was scaled to 1/4 size
@@ -124,8 +126,5 @@ def display_result(frame, face_locations: list, face_names):
         # Draw a label with a name below the face
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.25, (255, 255, 255), 1)
 
-    cv2.imshow('Video', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
