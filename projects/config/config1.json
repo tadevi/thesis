@@ -15,7 +15,7 @@
           "name": "validate"
         },
         {
-          "package": "modules",
+          "package": "modules.utils",
           "name": "storage",
           "configs": {
             "mongo_url": "mongodb://localhost:27017/",

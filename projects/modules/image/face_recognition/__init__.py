@@ -12,9 +12,9 @@ import numpy as np
 
 from modules import utils
 from modules.base import Map
-from modules.storage import DEFAULT_MONGO_URL, DEFAULT_MONGO_DB
+from modules.utils.storage import DEFAULT_MONGO_URL, DEFAULT_MONGO_DB
 from modules.utils import log
-from modules import storage
+from modules.utils import storage
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 face_storage_path = os.path.join(parent_folder_path, "face_db")

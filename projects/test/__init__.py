@@ -14,18 +14,19 @@ data_folder_path = os.path.join(parent_folder_path, "data")
 def run():
     log.mode(log.LOG_MODE_VERBOSE)
 
-    # test_validate_and_storage()
+    test_validate_and_storage()
     # test_human_detection()
     # test_camera_flow()
     # test_network()
     # test_cv2()
     # test_cloud_http()
-    test_post_camera_cloud()
+    # test_post_camera_cloud()
+    # test_camera_flow()
 
 
 def test_validate_and_storage():
     from datetime import datetime
-    from modules import storage
+    from modules.utils import storage
     from modules.text.gps import validate
 
     gps_data1 = {
