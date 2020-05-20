@@ -4,7 +4,7 @@ from rule_engine.HandleScalar import HandleScalar
 from rule_engine.HandleStream import HandleStream
 from rule_engine.UrlToStream import UrlToStream
 
-config_name = 'config/config.json'
+config_name = 'config/config3.json'
 
 
 def lookup_rule(input):
