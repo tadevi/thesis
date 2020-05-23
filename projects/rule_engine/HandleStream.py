@@ -12,7 +12,7 @@ def __getModule__(cam, module):
             **module['configs']
         }
 
-    call = import_module('.'+ module['name'], module['package'])
+    call = import_module('.' + module['name'], module['package'])
     main = getattr(call, 'Main')
     return {
         'configs': configs,

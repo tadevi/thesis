@@ -7,7 +7,7 @@ def __getModule__(module):
     configs = {}
     if not module.get('configs') is None:
         configs = module['configs']
-    call = import_module(module['name'], module['package'])
+    call = import_module('.' + module['name'], module['package'])
     main = getattr(call, 'Main')
     return {
         'configs': configs,
