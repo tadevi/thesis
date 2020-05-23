@@ -5,7 +5,7 @@ from threading import Thread
 from cv2 import cv2
 from flask import *
 
-from modules.utils import get_configs
+from modules.utils import get_configs, log
 from rule_engine import HandleStream, lookup_rule, HandleScalar
 
 channel_analysis = {}
@@ -27,6 +27,7 @@ def add_to_channel_stream(channel_id, queue):
 
 
 def start_camera_analysis(configs):
+    log.i('starting a camera with configs', configs)
     Thread(target=HandleStream(configs).run, args=()).start()
 
 
@@ -115,10 +116,10 @@ def make_web():
     @_app.route('/video')
     def video():
         if not (request.args.get('cam_id') is None):
-            return Response(gen(channel_stream, request.args.get('cam_id')),
+            return Response(gen(channel_analysis, request.args.get('cam_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
         elif not (request.args.get('stream_id') is None):
-            return Response(gen(channel_analysis, request.args.get('stream_id')),
+            return Response(gen(channel_stream, request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
         return {
             "status": "success",
@@ -135,7 +136,8 @@ def make_web():
         return node_meta
 
     try:
+        meta=get_configs('meta')
         start_up()
-        _app.run(host='0.0.0.0',port=3000,threaded=True)
+        _app.run(host='0.0.0.0', port=meta['port'], threaded=True)
     except:
         traceback.print_exc(file=sys.stdout)
