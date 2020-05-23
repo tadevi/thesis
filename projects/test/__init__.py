@@ -1,8 +1,7 @@
 import os
 
-import cv2
+from cv2 import cv2
 
-from modules import utils
 from modules.utils import log
 
 tag = "Test"

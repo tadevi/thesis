@@ -1,11 +1,10 @@
 import json
 
+from bson import ObjectId
 from flask import Flask, render_template, request
 
-from modules.utils import storage
 from modules import utils
-import json
-from bson import ObjectId
+from modules.utils import storage
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -16,6 +15,7 @@ class JSONEncoder(json.JSONEncoder):
 
 
 encoder = JSONEncoder()
+
 config_name = 'config/config.json'
 
 

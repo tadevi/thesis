@@ -5,7 +5,7 @@ LOG_MODE_INFO = 1
 
 LOG_MODE_NONE = 2
 
-log_mode = LOG_MODE_NONE
+log_mode = 1
 
 
 def mode(mode: int):

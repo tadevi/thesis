@@ -1,7 +1,7 @@
 # Storage GPS data to persistent storage
 #
 # This module should have def run(input, configs)
-# @input: received data from protocols
+# @input: received data from server
 # @configs: addition configs such as @database_name, @collection_name, @mongo_url
 from typing import Dict
 
@@ -13,7 +13,7 @@ from modules.utils import log
 tag = "Network"
 
 
-class Main(Base):
+class Network:
     # configs should at least have "collection_name"
     def __init__(self, configs: Dict):
         self.configs = configs
