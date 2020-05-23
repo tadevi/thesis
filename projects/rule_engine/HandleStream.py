@@ -4,11 +4,13 @@ from modules.base import Filter, Map
 from rule_engine.UrlToStream import UrlToStream
 
 
-def __getModule__(module, additional):
-    configs = additional
-
+def __getModule__(cam, module):
+    configs = cam
     if not module.get('configs') is None:
-        configs = {**configs, **module['configs']}
+        configs = {
+            **configs,
+            **module['configs']
+        }
 
     call = import_module('.' + module['name'], module['package'])
     main = getattr(call, 'Main')
@@ -21,7 +23,11 @@ def __getModule__(module, additional):
 
 class HandleStream:
     def __init__(self, configs):
-        self.modules = list(map(lambda x: __getModule__(x, configs), configs['modules']))
+        cam = {
+            'camera_id': configs['camera_id'],
+            'name': configs['name']
+        }
+        self.modules = list(map(lambda x: __getModule__(cam, x), configs['modules']))
 
         self.url_to_stream = UrlToStream(configs)
 

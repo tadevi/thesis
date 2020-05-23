@@ -33,11 +33,9 @@ def start_camera_analysis(configs):
 def start_up():
     start_up_cam = get_configs('start_up')
     for cam in start_up_cam:
-        configs = {
-            **cam,
-            **lookup_rule(cam)
-        }
-
+        configs = lookup_rule(cam)
+        configs['camera_id'] = cam['camera_id']
+        configs['name'] = cam['name']
         start_camera_analysis(configs)
 
 
@@ -53,6 +51,7 @@ def make_web():
     json body request have format:
     {
         "name": <rule name>,
+        "camera_id":<camera id>,
         "url" : <optional>, // rtsp/ mjpeg stream for video stream,
         ... additional fields
     }
@@ -62,12 +61,8 @@ def make_web():
     def stream():
         data = request.json
         configs = lookup_rule(data)
-        node_config = get_configs('meta')
-
-        configs = {
-            **configs,
-            **node_config
-        }
+        configs['camera_id'] = data['camera_id']
+        configs['name'] = data['name']
         start_camera_analysis(configs)
         return {
             "status": "success"
@@ -141,6 +136,6 @@ def make_web():
 
     try:
         start_up()
-        _app.run(host='localhost', port=3000, threaded=True)
+        _app.run(host='0.0.0.0', port=3000, threaded=True)
     except:
         traceback.print_exc(file=sys.stdout)
