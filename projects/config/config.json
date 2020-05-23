@@ -1,41 +1,53 @@
 {
-  "meta": {
-    "name": "Fog node name",
-    "layer": 1,
-    "storage": 1000,
-    "node_url": "http://localhost:3000"
-  },
-  "rules": [
-    {
-      "data_type": "scalar",
-      "name": "gps",
-      "modules": [
-        {
-          "package": "modules.text.gps",
-          "name": "validate"
-        }
-      ]
-    },
-    {
-      "data_type": "stream",
-      "name": "traffic_camera",
-      "modules": [
-        {
-          "package": "modules.stream",
-          "name": "mjpeg",
-          "configs": {
-            "cloud_url": "http://google.com.vn/video"
-          }
-        },
-        {
-          "package": "modules.stream",
-          "name": "mjpeg",
-          "configs": {
-            "analysis": true,
-            "cloud_url": "http://google.com.cn/stream"
-          }
-        }
-      ]
-    }
-  ]
+	"meta": {
+		"name": "Fog 1-1",
+			"layer": 1,
+			"storage": 1000,
+			"node_url": "http://34.87.27.226"
+	},
+		"rules": [
+		{
+			"data_type": "scalar",
+			"name": "gps",
+			"modules": [
+			{
+				"package": "modules.text.gps",
+				"name": "validate"
+			},
+			{
+				"package": "modules.utils",
+				"name": "storage",
+				"configs": {
+					"mongo_url": "mongodb://localhost:27017/",
+					"db_name": "iot-db",
+					"col_name": "gps"
+				}
+			}
+			]
+		},
+		{
+			"data_type": "stream",
+			"name": "traffic_camera",
+			"modules": [
+			{
+				"package": "modules.stream",
+				"name": "mjpeg",
+				"configs":{
+					"cloud_url":"http://google.com"
+				}
+			}
+			]
+		}
+	],
+	"start_up": [
+	{
+		"name": "traffic_camera",
+		"camera_id": "12345",
+		"url": "rtmp://54.173.34.172:1937/publish_demo/"
+	}
+	],
+	"database": {
+		"mongo_url": "mongodb://localhost:27017/",
+		"db_name": "iot-db"
+	}
 }

@@ -136,6 +136,6 @@ def make_web():
 
     try:
         start_up()
-        _app.run(host='0.0.0.0', port=3000, threaded=True)
+        _app.run(host='0.0.0.0',port=3000,threaded=True)
     except:
         traceback.print_exc(file=sys.stdout)
