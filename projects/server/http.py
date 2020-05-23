@@ -91,12 +91,13 @@ def make_web():
         output = HandleScalar(configs).run(inputs)
         if output is None:
             return {
-                "status": "failed",
-                "data": "Invalid input"
+                "status_code": 400,
+                "message": "Invalid input!"
             }
         else:
             return {
-                "status": "success"
+                "status_code": 200,
+                "message": "Server received your request!"
             }
 
     def gen(channel, channel_id):
@@ -136,7 +137,7 @@ def make_web():
         return node_meta
 
     try:
-        meta=get_configs('meta')
+        meta = get_configs('meta')
         start_up()
         _app.run(host='0.0.0.0', port=meta['port'], threaded=True)
     except:
