@@ -30,6 +30,14 @@
       "name": "traffic_camera",
       "modules": [
         {
+          "package": "modules.stream",
+          "name": "mjpeg",
+          "configs": {
+            "cloud_url": "http://34.87.71.10:3000",
+            "type": "stream"
+          }
+        },
+        {
           "package": "modules.image",
           "name": "face_recognition",
           "configs": {
@@ -42,7 +50,8 @@
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "cloud_url": "http://34.87.71.10:3000"
+            "cloud_url": "http://34.87.71.10:3000",
+            "type": "analysis"
           }
         }
       ]
