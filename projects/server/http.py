@@ -5,8 +5,8 @@ from threading import Thread
 from cv2 import cv2
 from flask import *
 
-from modules.utils import get_configs, log
-from rule_engine import HandleStream, lookup_rule, HandleScalar
+from modules.utils import get_configs, log, lookup_rule
+from rule_engine import HandleStream, HandleScalar
 from server.channel import get_channel
 
 

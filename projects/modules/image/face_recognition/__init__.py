@@ -39,6 +39,8 @@ log.i(tag, "loaded all", len(known_face_encodings), "known faces")
 
 
 class Main(Map):
+    DROP_FRAME = 5
+
     def __init__(self, configs: dict):
         self.configs = configs
         # format:
@@ -65,7 +67,7 @@ class Main(Map):
 
     def run(self, input: np.ndarray):
 
-        if self.process_frame == 10:
+        if self.process_frame == Main.DROP_FRAME:
             self.process_frame = 1
             start_time = time.time()
             self.face_locations = face_recognition.face_locations(input)
