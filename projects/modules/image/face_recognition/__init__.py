@@ -66,7 +66,6 @@ class Main(Map):
         self.process_frame = 1
 
     def run(self, input: np.ndarray):
-
         if self.process_frame == Main.DROP_FRAME:
             self.process_frame = 1
             start_time = time.time()
@@ -98,9 +97,7 @@ class Main(Map):
 
         self.process_frame += 1
 
-        draw_result_on_frame(input, self.face_locations, self.face_names)
-
-        return input
+        return draw_result_on_frame(input, self.face_locations, self.face_names)
 
     def store_records(self, profiles: dict):
         for id, profile in profiles.items():
@@ -128,6 +125,7 @@ class Main(Map):
 
 def draw_result_on_frame(frame, face_locations: list, face_names):
     # Display the results
+    frame = frame.copy()
     for (top, right, bottom, left), name in zip(face_locations, face_names):
         # Scale back up face locations since the frame we detected in was scaled to 1/4 size
         # top *= 4
@@ -142,3 +140,4 @@ def draw_result_on_frame(frame, face_locations: list, face_names):
         cv2.rectangle(frame, (left, bottom - 28), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.7, (255, 255, 255), 1)
+    return frame

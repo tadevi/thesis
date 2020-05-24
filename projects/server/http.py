@@ -103,8 +103,8 @@ def make_web():
 
     @_app.route('/video')
     def video():
-        if request.args.get('cam_id') is not None:
-            return Response(gen(get_channel('analysis'), request.args.get('cam_id')),
+        if request.args.get('analysis_id') is not None:
+            return Response(gen(get_channel('analysis'), request.args.get('analysis_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
         elif request.args.get('stream_id') is not None:
             return Response(gen(get_channel('stream'), request.args.get('stream_id')),
