@@ -55,38 +55,48 @@ class Main(Map):
             "col_name": configs.get("col_name"),
         })
 
+        self.face_locations = []
+        self.face_encodings = []
+
+        self.unrecognized_people_count = 0
+        self.recognized_profile_indices = set()
+        self.face_names = []
+        self.process_frame = 1
+
     def run(self, input: np.ndarray):
-        start_time = time.time()
 
-        face_locations = face_recognition.face_locations(input)
-        face_encodings = face_recognition.face_encodings(input, face_locations)
+        if self.process_frame == 10:
+            self.process_frame = 1
+            start_time = time.time()
+            self.face_locations = face_recognition.face_locations(input)
+            self.face_encodings = face_recognition.face_encodings(input, self.face_locations)
 
-        unrecognized_people_count = 0
-        recognized_profile_indices = set()
-        face_names = []
+            for face_encoding in self.face_encodings:
+                matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
+                face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
+                best_match_index = int(np.argmin(face_distances))
+                if matches[best_match_index]:
+                    name = profiles[best_match_index]["name"]
+                    self.recognized_profile_indices.add(best_match_index)
+                else:
+                    name = "unknown"
+                self.face_names.append(name)
 
-        for face_encoding in face_encodings:
-            matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
-            face_distances = face_recognition.face_distance(known_face_encodings, face_encoding)
-            best_match_index = int(np.argmin(face_distances))
-            if matches[best_match_index]:
-                name = profiles[best_match_index]["name"]
-                recognized_profile_indices.add(best_match_index)
-            else:
-                name = "unknown"
-            face_names.append(name)
+            recognized_profiles = {profiles[i]["id"]: profiles[i] for i in self.recognized_profile_indices}
+            end_time = time.time()
 
-        recognized_profiles = {profiles[i]["id"]: profiles[i] for i in recognized_profile_indices}
-        end_time = time.time()
+            log.v(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) recognized",
+                  len(recognized_profiles),
+                  "people:",
+                  [profile["name"] for profile_id, profile in recognized_profiles.items()])
+            if self.unrecognized_people_count > 0:
+                log.v(tag, "(WARNING)", self.unrecognized_people_count, "people not recognized")
 
-        log.v(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) recognized", len(recognized_profiles),
-              "people:",
-              [profile["name"] for profile_id, profile in recognized_profiles.items()])
-        if unrecognized_people_count > 0:
-            log.v(tag, "(WARNING)", unrecognized_people_count, "people not recognized")
+            self.store_records(recognized_profiles)
 
-        self.store_records(recognized_profiles)
-        draw_result_on_frame(input, face_locations, face_names)
+        self.process_frame += 1
+
+        draw_result_on_frame(input, self.face_locations, self.face_names)
 
         return input
 
@@ -127,6 +137,6 @@ def draw_result_on_frame(frame, face_locations: list, face_names):
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
         # Draw a label with a name below the face
-        cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
+        cv2.rectangle(frame, (left, bottom - 28), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.25, (255, 255, 255), 1)
+        cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.7, (255, 255, 255), 1)
