@@ -38,6 +38,7 @@ class HandleStream:
             frame = self.url_to_stream.get()
             if frame is None:
                 clear_from_channel(self.configs['camera_id'])
+                break
             _continue = False
             for module in self.modules:
                 if isinstance(module['main'], Filter):
