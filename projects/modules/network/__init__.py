@@ -7,10 +7,11 @@ from typing import Dict
 
 import requests
 
-from modules.base import Base
 from modules.utils import log
 
 tag = "Network"
+
+requests.adapters.DEFAULT_RETRIES = 2
 
 
 class Network:

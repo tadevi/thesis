@@ -1,23 +1,9 @@
 import json
 
+from modules.utils import config_name
 from rule_engine.HandleScalar import HandleScalar
 from rule_engine.HandleStream import HandleStream
 from rule_engine.UrlToStream import UrlToStream
-
-config_name = 'config/config.json'
-
-
-def lookup_rule(input):
-    with open(config_name, 'r') as f:
-        json_config = json.load(f)
-        rules = json_config['rules']
-        rules = list(filter(lambda x: x['name'] == input['name'], rules))
-        if not len(rules) == 1:
-            return "Rule for this type not found!"
-        return {
-            **rules[0],
-            **input
-        }
 
 
 class RuleEngine:
