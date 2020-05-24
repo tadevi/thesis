@@ -7,23 +7,7 @@ from flask import *
 
 from modules.utils import get_configs, log
 from rule_engine import HandleStream, lookup_rule, HandleScalar
-
-channel_analysis = {}
-channel_stream = {}
-
-'''
-                           Fog 1                  Fog 2                         Cloud
-    Camera ------>      start_up --------------> analysis -------------------> analysis
-
-'''
-
-
-def add_to_channel_analysis(channel_id, queue):
-    channel_analysis[channel_id] = queue
-
-
-def add_to_channel_stream(channel_id, queue):
-    channel_stream[channel_id] = queue
+from server.channel import get_channel
 
 
 def start_camera_analysis(configs):
@@ -101,12 +85,15 @@ def make_web():
             }
 
     def gen(channel, channel_id):
-        queue = channel[channel_id]
-        while True:
-            frame = queue.get()
-            _, frame = cv2.imencode('.JPEG', frame)
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame.tostring() + b'\r\n')
+        queue = channel.get(channel_id)
+        if queue is not None:
+            while True:
+                frame = queue.get()
+                _, frame = cv2.imencode('.JPEG', frame)
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame.tostring() + b'\r\n')
+        else:
+            yield b'--\r\n'
 
     '''
     Re-stream video from camera
@@ -116,16 +103,12 @@ def make_web():
 
     @_app.route('/video')
     def video():
-        if not (request.args.get('cam_id') is None):
-            return Response(gen(channel_analysis, request.args.get('cam_id')),
+        if request.args.get('cam_id') is not None:
+            return Response(gen(get_channel('analysis'), request.args.get('cam_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
-        elif not (request.args.get('stream_id') is None):
-            return Response(gen(channel_stream, request.args.get('stream_id')),
+        elif request.args.get('stream_id') is not None:
+            return Response(gen(get_channel('stream'), request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
-        return {
-            "status": "success",
-            "message": "Resource not found!"
-        }
 
     '''
     fog node query
