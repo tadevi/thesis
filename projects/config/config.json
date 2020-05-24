@@ -1,90 +1,30 @@
 {
   "meta": {
-    "name": "Fog 1-1",
-    "layer": 1,
+    "name": "Cloud",
+    "layer": 3,
     "storage": 1000,
+    "node_url": "http://34.87.45.203",
     "port": 3000
   },
   "rules": [
-    {
-      "data_type": "scalar",
-      "name": "gps",
-      "modules": [
-        {
-          "package": "modules.text.gps",
-          "name": "validate"
-        },
-        {
-          "package": "modules.utils",
-          "name": "storage",
-          "configs": {
-            "mongo_url": "mongodb://localhost:27017/",
-            "db_name": "iot-db",
-            "col_name": "gps"
-          }
-        }
-      ]
-    },
     {
       "data_type": "stream",
       "name": "traffic_camera",
       "modules": [
         {
-          "package": "modules.stream",
-          "name": "mjpeg",
-          "configs": {
-            "cloud_url": "http://34.87.71.10:3000",
-            "type": "stream"
-          }
-        },
-        {
           "package": "modules.image",
           "name": "face_recognition",
           "configs": {
             "mongo_url": "mongodb://localhost:27017/",
-            "db_name": "face-db",
-            "col_name": "profile"
-          }
-        },
-        {
-          "package": "modules.stream",
-          "name": "mjpeg",
-          "configs": {
-            "cloud_url": "http://34.87.71.10:3000",
-            "type": "analysis"
+            "db_name": "iot-db",
+            "col_name": "appearance"
           }
         }
       ]
-    },
-    {
-      "data_type": "scalar",
-      "name": "water",
-      "modules": [
-        {
-          "package": "modules.text.water",
-          "name": "validate"
-        },
-        {
-          "package": "modules.text.water",
-          "name": "send_to_cloud",
-          "configs": {
-            "cloud_url": "http://35.189.28.144:3000"
-          }
-        }
-      ]
-    }
-  ],
-  "start_up": [
-    {
-      "name": "traffic_camera",
-      "camera_id": "12345",
-      "demo": "true",
-      "url": "https://www.youtube.com/watch?v=K8rAIUERUJE",
-      "type": "none"
     }
   ],
   "database": {
     "mongo_url": "mongodb://localhost:27017/",
-    "db_name": "iot-db"
+    "db_name": "cloud-db"
   }
 }
