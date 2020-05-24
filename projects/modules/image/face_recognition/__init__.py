@@ -1,4 +1,5 @@
 import os
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import time
@@ -38,7 +39,7 @@ log.i(tag, "loaded all", len(known_face_encodings), "known faces")
 
 
 class Main(Map):
-    def __init__(self, configs:dict):
+    def __init__(self, configs: dict):
         self.configs = configs
         # format:
         # {
@@ -87,6 +88,8 @@ class Main(Map):
         self.store_records(recognized_profiles)
         draw_result_on_frame(input, face_locations, face_names)
 
+        return input
+
     def store_records(self, profiles: dict):
         for id, profile in profiles.items():
             if id not in self.appearing_people:
@@ -127,4 +130,3 @@ def draw_result_on_frame(frame, face_locations: list, face_names):
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 0.25, (255, 255, 255), 1)
-

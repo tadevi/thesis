@@ -31,6 +31,15 @@
       "name": "traffic_camera",
       "modules": [
         {
+          "package": "modules.image",
+          "name": "face_recognition",
+          "configs": {
+            "mongo_url": "mongodb://localhost:27017/",
+            "db_name": "face-db",
+            "col_name": "profile"
+          }
+        },
+        {
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
@@ -45,7 +54,7 @@
       "name": "traffic_camera",
       "camera_id": "12345",
       "demo": "true",
-      "url": "https://www.youtube.com/watch?v=HECa3bAFAYk"
+      "url": "https://www.youtube.com/watch?v=cQ54GDm1eL0"
     }
   ],
   "database": {
