@@ -26,6 +26,7 @@ class Main(Map):
             d['stream_id'] = self.configs['camera_id']
             d['url'] = node_url + ":" + str(port) + "/video?stream_id=" + camera_id
 
+        log.i("View stream at", d['url'])
         # network_module.post(configs['cloud_url'] + '/camera', {
         #     **d,
         #     "name": configs['name'],
