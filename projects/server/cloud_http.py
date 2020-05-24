@@ -4,7 +4,7 @@ from bson import ObjectId
 from flask import Flask, render_template, request
 
 from modules import utils
-from modules.utils import storage
+from modules.utils import storage, get_configs
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -107,6 +107,7 @@ def make_web():
         pass
 
     try:
-        _app.run(host='localhost', port=4000, threaded=True)
+        meta = get_configs()
+        _app.run(host='localhost', port=meta['port'], threaded=True)
     except:
         print('unable to open port')

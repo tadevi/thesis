@@ -3,7 +3,7 @@ from queue import Queue
 from modules.base import Map
 from modules.network import Network
 from modules.utils import log, get_configs
-from server.http import add_to_channel_analysis, add_to_channel_stream
+from server.channel import add_to_channel_analysis, add_to_channel_stream
 
 
 class Main(Map):
@@ -17,11 +17,11 @@ class Main(Map):
         if configs.get('analysis'):
             add_to_channel_analysis(configs['camera_id'], self.queue)
             d['camera_id'] = configs['camera_id']
-            d['url'] = node_config['node_url'] + "/video?cam_id=" + configs['camera_id']
+            d['url'] = node_config['node_url'] + ":" + str(node_config['port']) + "/video?cam_id=" + configs['camera_id']
         else:
             add_to_channel_stream(configs['camera_id'], self.queue)
             d['stream_id'] = configs['camera_id']
-            d['url'] = node_config['node_url'] + "/video?stream_id=" + configs['camera_id']
+            d['url'] = node_config['node_url'] + ":" + str(node_config['port']) + "/video?stream_id=" + configs['camera_id']
 
         network_module.post(configs['cloud_url'] + '/stream/', {
             **d,
