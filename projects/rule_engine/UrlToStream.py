@@ -2,6 +2,7 @@ from time import sleep
 
 import youtube_dl
 from cv2 import cv2
+import pafy
 
 
 def youtube_to_stream(url):
@@ -17,6 +18,17 @@ def youtube_to_stream(url):
     return cam
 
 
+def pafy_to_stream(url):
+    video = pafy.new(url)
+    cam = None
+    for stream in video.streams:
+        print(stream.resolution)
+        if stream.resolution == '640x360':
+            url = stream.url
+            cam = cv2.VideoCapture(url)
+    return cam
+
+
 class UrlToStream:
     DEFAULT_QUALITY = '360p'
 
@@ -27,7 +39,7 @@ class UrlToStream:
 
         url = configs['url']
         if configs.get('demo'):
-            self.cam = youtube_to_stream(url)
+            self.cam = pafy_to_stream(url)
         else:
             self.cam = cv2.VideoCapture(url)
 
