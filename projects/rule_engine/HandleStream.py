@@ -2,6 +2,7 @@ from importlib import import_module
 
 from modules.base import Filter, Map
 from rule_engine.UrlToStream import UrlToStream
+from server.channel import clear_from_channel
 
 
 def __getModule__(cam, module):
@@ -23,6 +24,7 @@ def __getModule__(cam, module):
 
 class HandleStream:
     def __init__(self, configs):
+        self.configs = configs
         cam = {
             'camera_id': configs['camera_id'],
             'name': configs['name']
@@ -34,6 +36,8 @@ class HandleStream:
     def run(self):
         while True:
             frame = self.url_to_stream.get()
+            if frame is None:
+                clear_from_channel(self.configs['camera_id'])
             _continue = False
             for module in self.modules:
                 if isinstance(module['main'], Filter):

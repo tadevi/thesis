@@ -3,7 +3,7 @@ from queue import Queue
 from modules.base import Map
 from modules.network import Network
 from modules.utils import log, get_configs
-from server.http import add_to_channel_analysis, add_to_channel_stream
+from server.channel import add_to_channel_analysis, add_to_channel_stream
 
 
 class Main(Map):
