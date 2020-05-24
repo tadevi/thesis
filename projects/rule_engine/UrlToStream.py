@@ -23,8 +23,9 @@ class UrlToStream:
 
     def get(self):
         try:
-            if self.configs.get('demo'):
-                sleep(0.03)
+            #if self.configs.get('demo'):
+                #sleep(0.03)
+	#	pass
             _, frame = self.cam.read()
 
             self.frame_counter += 1
