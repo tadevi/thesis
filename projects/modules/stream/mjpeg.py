@@ -17,11 +17,11 @@ class Main(Map):
         if configs.get('analysis'):
             add_to_channel_analysis(configs['camera_id'], self.queue)
             d['camera_id'] = configs['camera_id']
-            d['url'] = node_config['node_url'] + ":" + node_config['port'] + "/video?cam_id=" + configs['camera_id']
+            d['url'] = node_config['node_url'] + ":" + str(node_config['port']) + "/video?cam_id=" + configs['camera_id']
         else:
             add_to_channel_stream(configs['camera_id'], self.queue)
             d['stream_id'] = configs['camera_id']
-            d['url'] = node_config['node_url'] + ":" + node_config['port'] + "/video?stream_id=" + configs['camera_id']
+            d['url'] = node_config['node_url'] + ":" + str(node_config['port']) + "/video?stream_id=" + configs['camera_id']
 
         network_module.post(configs['cloud_url'] + '/stream/', {
             **d,
