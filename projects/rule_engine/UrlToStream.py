@@ -7,6 +7,7 @@ from cv2 import cv2
 class UrlToStream:
     def __init__(self, configs):
         self.configs = configs
+        self.frame_counter = 0
         url = configs['url']
         if configs.get('demo'):
             ydl_opts = {}
@@ -25,6 +26,12 @@ class UrlToStream:
             if self.configs.get('demo'):
                 sleep(0.03)
             _, frame = self.cam.read()
+
+            self.frame_counter += 1
+
+            if self.frame_counter == self.cam.get(cv2.CAP_PROP_FRAME_COUNT):
+                self.frame_counter = 0
+                self.cam.set(cv2.CAP_PROP_POS_FRAMES, 0)
             return frame
         except:
             return None
