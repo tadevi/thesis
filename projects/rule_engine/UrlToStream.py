@@ -22,7 +22,6 @@ def pafy_to_stream(url):
     video = pafy.new(url)
     cam = None
     for stream in video.streams:
-        print(stream.resolution)
         if stream.resolution == '640x360':
             url = stream.url
             cam = cv2.VideoCapture(url)
@@ -34,11 +33,11 @@ class UrlToStream:
 
     def __init__(self, configs):
         self.configs = configs
+        self.init_cam()
 
-        self.frame_counter = 0
-
-        url = configs['url']
-        if configs.get('demo'):
+    def init_cam(self):
+        url = self.configs['url']
+        if self.configs.get('demo'):
             self.cam = pafy_to_stream(url)
         else:
             self.cam = cv2.VideoCapture(url)
@@ -50,11 +49,9 @@ class UrlToStream:
 
             _, frame = self.cam.read()
 
-            self.frame_counter += 1
-
-            if self.frame_counter == self.cam.get(cv2.CAP_PROP_FRAME_COUNT):
-                self.frame_counter = 0
-                self.cam.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            if frame is None and self.configs.get('demo'):
+                self.init_cam()
+                _, frame = self.cam.read()
             return frame
         except:
             return None
