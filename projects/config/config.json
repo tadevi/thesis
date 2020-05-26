@@ -78,7 +78,9 @@
     {
       "name": "traffic_camera",
       "camera_id": "12345",
-      "url": "https://www.youtube.com/watch?v=NxFkEj7KPC0"
+      "demo": "true",
+      "url": "https://www.youtube.com/watch?v=NxFkEj7KPC0",
+      "type": "none"
     }
   ],
   "database": {

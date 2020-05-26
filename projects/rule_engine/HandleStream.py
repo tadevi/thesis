@@ -30,15 +30,11 @@ class HandleStream:
         self.configs = configs
         cam = {
             'camera_id': configs['camera_id'],
-            'name': configs['name'],
-            'type': configs['type']
+            'name': configs['name']
         }
         self.modules = list(map(lambda x: __getModule__(cam, x), configs['modules']))
 
-        if cam.get('type') == 'mjpeg':
-            self.url_to_stream = MjpegToStream(configs)
-        else:
-            self.url_to_stream = UrlToStream(configs)
+        self.url_to_stream = UrlToStream(configs)
 
     def run(self):
         while True:

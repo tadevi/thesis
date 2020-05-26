@@ -33,7 +33,6 @@ class UrlToStream:
     DEFAULT_QUALITY = '360p'
 
     def __init__(self, configs):
-        print('URL TO STREAM')
         self.configs = configs
 
         self.frame_counter = 0
