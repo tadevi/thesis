@@ -1,6 +1,7 @@
 from importlib import import_module
 
 from modules.base import Filter, Map
+from rule_engine.MjpegToStream import MjpegToStream
 from rule_engine.UrlToStream import UrlToStream
 from server.channel import clear_from_channel
 
@@ -29,11 +30,15 @@ class HandleStream:
         self.configs = configs
         cam = {
             'camera_id': configs['camera_id'],
-            'name': configs['name']
+            'name': configs['name'],
+            'type': configs['type']
         }
         self.modules = list(map(lambda x: __getModule__(cam, x), configs['modules']))
 
-        self.url_to_stream = UrlToStream(configs)
+        if cam.get('type') == 'mjpeg':
+            self.url_to_stream = MjpegToStream(configs)
+        else:
+            self.url_to_stream = UrlToStream(configs)
 
     def run(self):
         while True:

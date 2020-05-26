@@ -11,7 +11,6 @@ from server.channel import get_channel
 
 
 def start_camera_analysis(configs):
-    log.i('starting a camera with configs', configs)
     Thread(target=HandleStream(configs).run, args=()).start()
 
 
@@ -21,6 +20,7 @@ def start_up():
         configs = lookup_rule(cam)
         configs['camera_id'] = cam['camera_id']
         configs['name'] = cam['name']
+        configs['type'] = cam['type']
         start_camera_analysis(configs)
 
 
@@ -37,7 +37,8 @@ def make_web():
     {
         "name": <rule name>,
         "camera_id":<camera id>,
-        "url" : <optional>, // rtsp/ mjpeg stream for video stream,
+        "type": "mjpeg" vs other
+        "url" : <optional>, 
         ... additional fields
     }
     '''
@@ -48,6 +49,7 @@ def make_web():
         configs = lookup_rule(data)
         configs['camera_id'] = data['camera_id']
         configs['name'] = data['name']
+        configs['type'] = data['type']
         start_camera_analysis(configs)
         return {
             "status": "success"
