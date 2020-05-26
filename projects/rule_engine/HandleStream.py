@@ -1,12 +1,14 @@
 from importlib import import_module
 
 from modules.base import Filter, Map
+from rule_engine.MjpegToStream import MjpegToStream
 from rule_engine.UrlToStream import UrlToStream
 from server.channel import clear_from_channel
 
 
 def __getModule__(cam, module):
     configs = cam
+
     if not module.get('configs') is None:
         configs = {
             **configs,
@@ -15,6 +17,7 @@ def __getModule__(cam, module):
 
     call = import_module('.' + module['name'], module['package'])
     main = getattr(call, 'Main')
+
     return {
         'configs': configs,
         'call': call,

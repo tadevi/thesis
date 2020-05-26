@@ -1,10 +1,13 @@
 import json
 
 from bson import ObjectId
-from flask import Flask, render_template, request
+from cv2 import cv2
+from flask import Flask, render_template, request, Response
 
 from modules import utils
-from modules.utils import storage, get_configs
+from modules.utils import storage, get_configs, lookup_rule
+from server.channel import get_channel
+from server.http import start_camera_analysis
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -90,6 +93,39 @@ def make_web():
 
         return {"data": data}
 
+    @_app.route('/stream/', methods=['POST'])
+    def stream():
+        data = request.json
+        configs = lookup_rule(data)
+        configs['camera_id'] = data['camera_id']
+        configs['name'] = data['name']
+        start_camera_analysis(configs)
+        return {
+            "status": "success"
+        }
+
+    def gen(channel, channel_id):
+        queue = channel.get(channel_id)
+        if queue is not None:
+            while True:
+                frame = queue.get()
+                _, frame = cv2.imencode('.JPEG', frame)
+                yield (b'--frame\r\n'
+                       b'Content-Type:image/jpeg\r\n'
+                       b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
+                                                                        b'\r\n' + frame.tostring() + b'\r\n')
+        else:
+            yield b'--\r\n'
+
+    @_app.route('/video')
+    def video():
+        if request.args.get('analysis_id') is not None:
+            return Response(gen(get_channel('analysis'), request.args.get('analysis_id')),
+                            mimetype='multipart/x-mixed-replace; boundary=frame')
+        elif request.args.get('stream_id') is not None:
+            return Response(gen(get_channel('stream'), request.args.get('stream_id')),
+                            mimetype='multipart/x-mixed-replace; boundary=frame')
+
     @_app.route('/camera', methods=['POST'])
     def add_camera():
         json = request.json
@@ -106,8 +142,5 @@ def make_web():
     def get_predict_traffic():
         pass
 
-    try:
-        meta = get_configs()
-        _app.run(host='localhost', port=meta['port'], threaded=True)
-    except:
-        print('unable to open port')
+    meta = get_configs('meta')
+    _app.run(host='0.0.0.0', port=meta['port'], threaded=True)
