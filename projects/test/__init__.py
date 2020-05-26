@@ -21,7 +21,7 @@ def run():
     # test_cloud_http()
     # test_post_camera_cloud()
     # test_camera_flow()
-    test_post_fake_data()
+    test_stream_fog2()
 
 
 def test_validate_and_storage():
@@ -151,46 +151,23 @@ def test_gps_flow():
         is_post = not is_post
 
 
-def test_cloud_http():
-    from server.cloud_http import make_web
+def test_stream_fog2():
+    from server.http import make_web
     import threading
 
     t = threading.Thread(target=make_web)
-    t.daemon = True
     t.start()
 
     from modules import network
-    network_module = network.Main({})
+    network_module = network.Network({})
 
-    while True:
-        input("Press Enter to send GET\n")
-        network_module.get("http://localhost:4000/appearance",
-                           {
-                               "from": 1589197615040,
-                               "to": 1589712007301
-                           })
-
-
-def test_post_camera_cloud():
-    from server.cloud_http import make_web
-    import threading
-
-    t = threading.Thread(target=make_web)
-    t.daemon = True
-    t.start()
-
-    from modules import network
-    network_module = network.Main({})
-
-    while True:
-        input("Press Enter to send POST\n")
-        network_module.post("http://localhost:4000/camera",
-                            {
-                                "camera_id": "test",
-                                "name": "cameraTest",
-                                "type": -1,
-                                "url": "https://google.com.vn"
-                            })
+    input("Press Enter to send POST\n")
+    network_module.post("http://localhost:3000/stream",
+                        {
+                            "name": "traffic_camera",
+                            "camera_id": "0",
+                            "url": 0
+                        })
 
 
 def test_post_fake_data():
