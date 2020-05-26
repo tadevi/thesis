@@ -12,4 +12,7 @@ class Main(Base):
         self.network = network.Network({})
 
     def run(self, input: Dict):
-        self.network.post(self.configs['cloud_url'] + '/water', input)
+        self.network.post(self.configs['cloud_url'] + '/iot/', {
+            "name": "water",
+            "data": input
+        })

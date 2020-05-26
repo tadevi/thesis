@@ -21,7 +21,7 @@ class WaterDataFaker:
 
     def __post_fake_data(self):
         while not self.is_canceled:
-            self.network.post(self.remote_url + '/iot', self.__generate_fake_data())
+            self.network.post(self.remote_url + '/iot/', self.__generate_fake_data())
             time.sleep(self.interval)
         log.v(tag, "stop posting data")
 
