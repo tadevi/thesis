@@ -13,7 +13,7 @@ data_folder_path = os.path.join(parent_folder_path, "data")
 def run():
     log.mode(log.LOG_MODE_VERBOSE)
 
-    test_validate_and_storage()
+    # test_validate_and_storage()
     # test_human_detection()
     # test_camera_flow()
     # test_network()
@@ -21,6 +21,7 @@ def run():
     # test_cloud_http()
     # test_post_camera_cloud()
     # test_camera_flow()
+    test_post_fake_data()
 
 
 def test_validate_and_storage():
@@ -190,3 +191,21 @@ def test_post_camera_cloud():
                                 "type": -1,
                                 "url": "https://google.com.vn"
                             })
+
+
+def test_post_fake_data():
+    from fake_data import fake_gps
+    from fake_data import fake_water
+    from server.http import make_web
+    import threading
+
+    t = threading.Thread(target=make_web)
+    t.start()
+
+    input('ENTER to start posting fake text data to fog1\n')
+    fog1_url = "http://0.0.0.0:3000"
+    fake_gps = fake_gps.GpsDataFaker(fog1_url)
+    fake_water = fake_water.WaterDataFaker(fog1_url)
+
+    fake_gps.start_posting_fake_data()
+    fake_water.start_posting_fake_data()
