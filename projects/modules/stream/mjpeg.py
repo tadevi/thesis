@@ -31,7 +31,11 @@ class Main(Map):
             d['camera_id'] = self.configs['camera_id']
             d['url'] = 'http://' + node_url + ":" + str(port) + "/video?stream_id=" + camera_id
 
+<<<<<<< HEAD
             network_module.post(self.configs['cloud_url'] + '/camera/', {
+=======
+            network_module.post(self.configs['cloud_url'] + '/stream/', {
+>>>>>>> broadcast stream in mjpeg
                 **d,
                 "name": self.configs['name'],
             })
