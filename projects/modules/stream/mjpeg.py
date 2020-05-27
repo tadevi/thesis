@@ -23,14 +23,15 @@ class Main(Map):
             d['url'] = node_url + ":" + str(port) + "/video?analysis_id=" + camera_id
         else:
             add_to_channel_stream(self.configs['camera_id'], self.queue)
-            d['stream_id'] = self.configs['camera_id']
+            d['camera_id'] = self.configs['camera_id']
             d['url'] = node_url + ":" + str(port) + "/video?stream_id=" + camera_id
 
+            network_module.post(self.configs['cloud_url'] + '/stream/', {
+                **d,
+                "name": self.configs['name'],
+            })
+
         log.i("View stream at", d['url'])
-        # network_module.post(configs['cloud_url'] + '/camera', {
-        #     **d,
-        #     "name": configs['name'],
-        # })
 
     def __init__(self, configs):
         self.configs = configs
