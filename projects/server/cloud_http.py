@@ -126,7 +126,7 @@ def make_web():
             return Response(gen(get_channel('stream'), request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    @_app.route('/camera', methods=['POST'])
+    @_app.route('/camera/', methods=['POST'])
     def add_camera():
         json = request.json
         database.insert_one('camera', json)
