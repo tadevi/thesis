@@ -33,24 +33,19 @@
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "cloud_url": "http://34.87.71.10:3000",
+            "cloud_url": "http://34.87.93.24:3000",
             "type": "stream"
           }
         },
         {
           "package": "modules.image",
-          "name": "face_recognition",
-          "configs": {
-            "mongo_url": "mongodb://localhost:27017/",
-            "db_name": "face-db",
-            "col_name": "profile"
-          }
+          "name": "human_detection",
+          "configs": {}
         },
         {
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "cloud_url": "http://34.87.71.10:3000",
             "type": "analysis"
           }
         }
@@ -74,15 +69,7 @@
       ]
     }
   ],
-  "start_up": [
-    {
-      "name": "traffic_camera",
-      "camera_id": "12345",
-      "demo": "true",
-      "url": "https://www.youtube.com/watch?v=K8rAIUERUJE",
-      "type": "none"
-    }
-  ],
+  "start_up":[],
   "database": {
     "mongo_url": "mongodb://localhost:27017/",
     "db_name": "iot-db"
