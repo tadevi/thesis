@@ -46,7 +46,8 @@
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "type": "analysis"
+            "type": "analysis",
+            "cloud_url": "http://34.87.93.24:3000"
           }
         }
       ]
@@ -69,7 +70,7 @@
       ]
     }
   ],
-  "start_up":[],
+  "start_up": [],
   "database": {
     "mongo_url": "mongodb://localhost:27017/",
     "db_name": "iot-db"
