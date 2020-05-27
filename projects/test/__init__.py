@@ -21,7 +21,7 @@ def run():
     # test_cloud_http()
     # test_post_camera_cloud()
     # test_camera_flow()
-    test_stream_fog2()
+    test_fog2_stream()
 
 
 def test_validate_and_storage():
@@ -151,18 +151,18 @@ def test_gps_flow():
         is_post = not is_post
 
 
-def test_stream_fog2():
+def test_fog2_stream():
     from server.http import make_web
     import threading
+    from modules import network
 
     t = threading.Thread(target=make_web)
     t.start()
 
-    from modules import network
     network_module = network.Network({})
 
-    input("Press Enter to send POST\n")
-    network_module.post("http://localhost:3000/stream",
+    input("ENTER to post stream meta to fog1\n")
+    network_module.post("http://localhost:3000/stream/",
                         {
                             "name": "traffic_camera",
                             "camera_id": "0",
