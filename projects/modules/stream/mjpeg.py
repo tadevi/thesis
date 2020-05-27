@@ -40,6 +40,13 @@ class Main(Map):
             })
 
         log.i("View stream at", d['url'])
+<<<<<<< HEAD
+=======
+        network_module.post(self.configs['cloud_url'] + '/stream/', {
+            **d,
+            "name": self.configs['name'],
+        })
+>>>>>>> send stream url to remote in mjpeg
 
     def __init__(self, configs):
         self.configs = configs
