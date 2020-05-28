@@ -6,6 +6,7 @@
 from typing import Dict
 
 import requests
+import traceback
 
 from modules.utils import log
 
@@ -20,21 +21,35 @@ class Network:
         self.configs = configs
 
     def post(self, url, json):
-        response = requests.post(url, json=json)
-        log.i(tag, "POST to url", url, "\nwith data", json, "\nstatus code:", response.status_code, "\nreason:",
-              response.reason)
-        return {
-            "status_code": response.status_code,
-            "message": response.reason
-        }
+        try:
+            response = requests.post(url, json=json)
+            log.i(tag, "POST to url", url, "\nwith data", json, "\nstatus code:", response.status_code, "\nreason:",
+                  response.reason)
+            return {
+                "status_code": response.status_code,
+                "message": response.reason
+            }
+        except:
+            traceback.print_exc()
+            return {
+                "status_code": -1,
+                "message": "Exception"
+            }
 
     def get(self, url, params=None) -> dict:
-        response = requests.get(url, params=params)
-        json = response.json()
-        log.i(tag, "GET from url", url, "\nwith params:", params, "\nstatus code:", response.status_code, "\nreason:",
-              response.reason, "\njson:", json)
-        return {
-            "status_code": response.status_code,
-            "message": response.reason,
-            "data": json
-        }
+        try:
+            response = requests.get(url, params=params)
+            json = response.json()
+            log.i(tag, "GET from url", url, "\nwith params:", params, "\nstatus code:", response.status_code, "\nreason:",
+                  response.reason, "\njson:", json)
+            return {
+                "status_code": response.status_code,
+                "message": response.reason,
+                "data": json
+            }
+        except:
+            traceback.print_exc()
+            return {
+                "status_code": -1,
+                "message": "Exception"
+            }
