@@ -7,8 +7,13 @@ from server.channel import add_to_channel_analysis, add_to_channel_stream
 
 
 class Main(Map):
-
     def broadcast_stream(self):
+        if self.configs.get('type') == "analysis":
+            add_to_channel_analysis(self.configs['camera_id'], self.queue)
+        else:
+            add_to_channel_stream(self.configs['camera_id'], self.queue)
+
+    def push_to_cloud(self):
         node_config = get_configs('meta')
         network_module = Network({})
         d = {}
@@ -16,9 +21,7 @@ class Main(Map):
         node_url = get_node_ip()
         port = node_config['port']
         camera_id = self.configs['camera_id']
-
         if self.configs.get('type') == "analysis":
-            add_to_channel_analysis(self.configs['camera_id'], self.queue)
             d['camera_id'] = self.configs['camera_id']
             d['url'] = 'http://' + node_url + ":" + str(port) + "/video?analysis_id=" + camera_id
 
@@ -42,9 +45,14 @@ class Main(Map):
         self.configs = configs
         self.queue = Queue(maxsize=3)
         self.broadcast_stream()
+        self.push = False
 
     def run(self, inputs):
         super(Main, self).run(inputs)
+        if not self.push:
+            self.push_to_cloud()
+            self.push = True
+
         if self.queue.full():
             self.queue.get()
         self.queue.put(inputs)
