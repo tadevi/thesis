@@ -70,7 +70,15 @@
       ]
     }
   ],
-  "start_up": [],
+  "start_up": [
+    {
+      "name": "traffic_camera",
+      "url": "https://www.youtube.com/watch?v=7WpyIYLgYFg",
+      "type": "mjpeg",
+      "camera_id": "0",
+      "demo": "true"
+    }
+  ],
   "database": {
     "mongo_url": "mongodb://localhost:27017/",
     "db_name": "iot-db"
