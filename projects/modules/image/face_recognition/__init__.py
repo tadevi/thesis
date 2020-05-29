@@ -13,15 +13,14 @@ import numpy as np
 
 from modules import utils
 from modules.base import Map
-from modules.utils.storage import DEFAULT_MONGO_URL, DEFAULT_MONGO_DB
 from modules.utils import log
 from modules.utils import storage
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 face_storage_path = os.path.join(parent_folder_path, "face_db")
 
-mongo_client = pymongo.MongoClient(DEFAULT_MONGO_URL)
-db = mongo_client[DEFAULT_MONGO_DB]
+mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = mongo_client["cloud-db"]
 collection = db["profile"]
 cursor = collection.find({})
 
