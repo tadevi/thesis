@@ -30,17 +30,17 @@
       "name": "traffic_camera",
       "modules": [
         {
+          "package": "modules.image",
+          "name": "human_detection",
+          "configs": {}
+        },
+        {
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
             "cloud_url": "http://35.189.28.144:3000",
             "type": "stream"
           }
-        },
-        {
-          "package": "modules.image",
-          "name": "human_detection",
-          "configs": {}
         },
         {
           "package": "modules.stream",
