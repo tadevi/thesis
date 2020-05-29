@@ -2,8 +2,7 @@
   "meta": {
     "name": "Cloud",
     "layer": 3,
-    "storage": 1000,
-    "node_url": "http://34.87.45.203",
+    "storage": 10000,
     "port": 3000
   },
   "rules": [
