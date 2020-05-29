@@ -29,11 +29,11 @@ class Main(Map):
                 **d,
                 "name": self.configs['name'],
             })
-
         else:
             add_to_channel_stream(self.configs['camera_id'], self.queue)
             d['camera_id'] = self.configs['camera_id']
             d['url'] = 'http://' + node_url + ":" + str(port) + "/video?stream_id=" + camera_id
+
             network_module.post(self.configs['cloud_url'] + '/camera/', {
                 **d,
                 "name": self.configs['name'],
