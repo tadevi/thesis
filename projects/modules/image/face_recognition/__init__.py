@@ -60,7 +60,6 @@ class Main(Map):
         self.face_locations = []
         self.face_encodings = []
 
-        self.unrecognized_people_count = 0
         self.recognized_profile_indices = set()
         self.face_names = []
         self.process_frame = 1
@@ -71,6 +70,9 @@ class Main(Map):
             start_time = time.time()
             self.face_locations = face_recognition.face_locations(input)
             self.face_encodings = face_recognition.face_encodings(input, self.face_locations)
+            self.recognized_profile_indices.clear()
+            self.face_names.clear()
+            unrecognized_people_count = 0
 
             for face_encoding in self.face_encodings:
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
@@ -81,6 +83,7 @@ class Main(Map):
                     self.recognized_profile_indices.add(best_match_index)
                 else:
                     name = "unknown"
+                    unrecognized_people_count+=1
                 self.face_names.append(name)
 
             recognized_profiles = {profiles[i]["id"]: profiles[i] for i in self.recognized_profile_indices}
@@ -90,8 +93,8 @@ class Main(Map):
                   len(recognized_profiles),
                   "people:",
                   [profile["name"] for profile_id, profile in recognized_profiles.items()])
-            if self.unrecognized_people_count > 0:
-                log.v(tag, "(WARNING)", self.unrecognized_people_count, "people not recognized")
+            if unrecognized_people_count > 0:
+                log.v(tag, "(WARNING)", unrecognized_people_count, "people not recognized")
 
             self.store_records(recognized_profiles)
 

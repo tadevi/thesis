@@ -18,6 +18,14 @@
             "db_name": "iot-db",
             "col_name": "appearance"
           }
+        },
+        {
+          "package": "modules.stream",
+          "name": "mjpeg",
+          "configs": {
+            "cloud_url": "http://google.com.vn",
+            "type": "analysis"
+          }
         }
       ]
     }
