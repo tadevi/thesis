@@ -33,7 +33,7 @@
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "cloud_url": "http://34.87.93.24:3000",
+            "cloud_url": "http://35.189.28.144:3000",
             "type": "stream"
           }
         },
