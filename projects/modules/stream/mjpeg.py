@@ -21,20 +21,20 @@ class Main(Map):
         node_url = get_node_ip()
         port = node_config['port']
         camera_id = self.configs['camera_id']
-        if self.configs.get('type') == "analysis":
-            d['camera_id'] = self.configs['camera_id']
-            d['url'] = 'http://' + node_url + ":" + str(port) + "/video?analysis_id=" + camera_id
-
-            network_module.post(self.configs['cloud_url'] + '/stream/', {
-                **d,
-                "name": self.configs['name'],
-            })
-        else:
+        if self.configs.get('type') == "stream":
             add_to_channel_stream(self.configs['camera_id'], self.queue)
             d['camera_id'] = self.configs['camera_id']
             d['url'] = 'http://' + node_url + ":" + str(port) + "/video?stream_id=" + camera_id
 
             network_module.post(self.configs['cloud_url'] + '/camera/', {
+                **d,
+                "name": self.configs['name'],
+            })
+        else:
+            d['camera_id'] = self.configs['camera_id']
+            d['url'] = 'http://' + node_url + ":" + str(port) + "/video?analysis_id=" + camera_id
+
+            network_module.post(self.configs['cloud_url'] + '/stream/', {
                 **d,
                 "name": self.configs['name'],
             })
