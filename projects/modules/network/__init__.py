@@ -7,6 +7,7 @@ from typing import Dict
 
 import requests
 import traceback
+import threading
 
 from modules.utils import log
 
@@ -21,6 +22,10 @@ class Network:
         self.configs = configs
 
     def post(self, url, json):
+        t = threading.Thread(target=self.__post, args=(url, json), daemon=True)
+        t.start()
+
+    def __post(self, url, json):
         try:
             response = requests.post(url, json=json)
             log.i(tag, "POST to url", url, "\nwith data", json, "\nstatus code:", response.status_code, "\nreason:",
