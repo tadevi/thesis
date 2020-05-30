@@ -129,6 +129,5 @@ def fog_data():
 
 
 def make_web():
-    if __name__ == "__main__":
-        start_up()
-        app.run(port=GlobalConfigs.instance().get_port(), threaded=True)
+    start_up()
+    app.run(port=GlobalConfigs.instance().get_port(), threaded=True)

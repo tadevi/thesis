@@ -26,10 +26,10 @@ def get_database():
 
 
 def make_web():
-    _app = Flask(__name__, template_folder='.')
+    app = Flask(__name__, template_folder='.')
     database = get_database()
 
-    @_app.route('/')
+    @app.route('/')
     def index():
         return render_template('index.html')
 
@@ -37,7 +37,7 @@ def make_web():
     ai services
     '''
 
-    @_app.route('/appearance')
+    @app.route('/appearance')
     def get_people():
         from_time = request.args.get('from')
         if from_time is not None:
@@ -75,7 +75,7 @@ def make_web():
     camera services
     '''
 
-    @_app.route('/camera', methods=['GET'])
+    @app.route('/camera', methods=['GET'])
     def get_camera():
         camera_id = request.args.get('id')
 
@@ -88,7 +88,7 @@ def make_web():
 
         return {"data": data}
 
-    @_app.route('/stream/', methods=['POST'])
+    @app.route('/stream/', methods=['POST'])
     def stream():
         data = request.json
         configs = GlobalConfigs.instance().lookup_rule(data)
@@ -112,7 +112,7 @@ def make_web():
         else:
             yield b'--\r\n'
 
-    @_app.route('/video')
+    @app.route('/video')
     def video():
         if request.args.get('analysis_id') is not None:
             return Response(gen(get_channel('analysis'), request.args.get('analysis_id')),
@@ -121,7 +121,7 @@ def make_web():
             return Response(gen(get_channel('stream'), request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    @_app.route('/camera/', methods=['POST'])
+    @app.route('/camera/', methods=['POST'])
     def add_camera():
         json = request.json
         database.insert_one('camera', json)
@@ -133,9 +133,8 @@ def make_web():
     iot services
     '''
 
-    @_app.route('/traffic', methods=['GET'])
+    @app.route('/traffic', methods=['GET'])
     def get_predict_traffic():
         pass
 
-    if __name__ == "__main__":
-        _app.run(port=GlobalConfigs.instance().get_port(), threaded=True)
+    app.run(port=GlobalConfigs.instance().get_port(), threaded=True)
