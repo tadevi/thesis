@@ -1,7 +1,7 @@
 from importlib import import_module
 
 from modules.base import Filter, Map
-from rule_engine.MjpegToStream import MjpegToStream
+from resource_manager.ThreadTask import ThreadTask
 from rule_engine.UrlToStream import UrlToStream
 from server.channel import clear_from_channel
 
@@ -25,8 +25,9 @@ def __getModule__(cam, module):
     }
 
 
-class HandleStream:
+class HandleStream(ThreadTask):
     def __init__(self, configs):
+        super().__init__()
         self.configs = configs
         cam = {
             'camera_id': configs['camera_id'],

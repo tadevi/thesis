@@ -2,8 +2,7 @@
   "meta": {
     "name": "Fog 1-1",
     "layer": 1,
-    "storage": 1000,
-    "port": 3000
+    "storage": 1000
   },
   "rules": [
     {

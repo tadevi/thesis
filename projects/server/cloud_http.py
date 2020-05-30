@@ -5,7 +5,8 @@ from cv2 import cv2
 from flask import Flask, render_template, request, Response
 
 from modules import utils
-from modules.utils import storage, get_configs, lookup_rule
+from modules.utils import storage
+from resource_manager.GlobalConfigs import GlobalConfigs
 from server.channel import get_channel
 from server.http import start_camera_analysis
 
@@ -19,15 +20,9 @@ class JSONEncoder(json.JSONEncoder):
 
 encoder = JSONEncoder()
 
-config_name = 'config/config.json'
-
 
 def get_database():
-    with open(config_name, 'r') as f:
-        json_config = json.load(f)
-        db_config = json_config['database']
-
-        return storage.Main(db_config)
+    return storage.Main(GlobalConfigs.instance().get_config('database'))
 
 
 def make_web():
@@ -96,7 +91,7 @@ def make_web():
     @_app.route('/stream/', methods=['POST'])
     def stream():
         data = request.json
-        configs = lookup_rule(data)
+        configs = GlobalConfigs.instance().lookup_rule(data)
         configs['camera_id'] = data['camera_id']
         configs['name'] = data['name']
         start_camera_analysis(configs)
@@ -142,5 +137,5 @@ def make_web():
     def get_predict_traffic():
         pass
 
-    meta = get_configs('meta')
-    _app.run(host='0.0.0.0', port=meta['port'], threaded=True)
+    if __name__ == "__main__":
+        _app.run(port=GlobalConfigs.instance().get_port(), threaded=True)

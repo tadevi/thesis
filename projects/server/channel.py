@@ -1,13 +1,5 @@
-from modules.utils import log
-
 channel_analysis = {}
 channel_stream = {}
-
-'''
-                           Fog 1                  Fog 2                         Cloud
-    Camera ------>      start_up --------------> analysis -------------------> analysis
-
-'''
 
 
 def add_to_channel_analysis(channel_id, queue):
