@@ -1,7 +1,12 @@
-
 from resource_manager.GlobalConfigs import GlobalConfigs
-from server.cloud_http import make_web
 
 GlobalConfigs.instance().set_config('config.json')
 
-make_web()
+if GlobalConfigs.instance().get_config('name') == 'cloud':
+    from server.cloud_http import make_web
+
+    make_web()
+else:
+    from server.cloud_http import make_web
+
+    make_web()
