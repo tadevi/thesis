@@ -1,23 +1,25 @@
 import random
-import threading
 import time
-from modules.network import Network
+
 from modules import utils
+from modules.network import Network
 from modules.utils import log
+from resource_manager.ThreadPool import ThreadPool
+from resource_manager.ThreadTask import ThreadTask
 
 tag = "GpsDataFaker"
 
 
 class GpsDataFaker:
     def __init__(self, remote_url="http://35.187.225.56:3000", interval=5):
+        super().__init__()
         self.network = Network({})
         self.is_canceled = False
         self.remote_url = remote_url
         self.interval = interval
 
     def start_posting_fake_data(self):
-        t = threading.Thread(target=self.__post_fake_data)
-        t.start()
+        ThreadPool().get_thread().put_job(ThreadTask(self.__post_fake_data))
 
     def __post_fake_data(self):
         while not self.is_canceled:

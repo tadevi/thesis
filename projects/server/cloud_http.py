@@ -5,7 +5,8 @@ from cv2 import cv2
 from flask import Flask, render_template, request, Response
 
 from modules import utils
-from modules.utils import storage, get_configs, lookup_rule
+from modules.utils import storage
+from resource_manager.GlobalConfigs import GlobalConfigs
 from server.channel import get_channel
 from server.http import start_camera_analysis
 
@@ -19,22 +20,16 @@ class JSONEncoder(json.JSONEncoder):
 
 encoder = JSONEncoder()
 
-config_name = 'config/config.json'
-
 
 def get_database():
-    with open(config_name, 'r') as f:
-        json_config = json.load(f)
-        db_config = json_config['database']
-
-        return storage.Main(db_config)
+    return storage.Main(GlobalConfigs.instance().get_config('database'))
 
 
 def make_web():
-    _app = Flask(__name__, template_folder='.')
+    app = Flask(__name__, template_folder='.')
     database = get_database()
 
-    @_app.route('/')
+    @app.route('/')
     def index():
         return render_template('index.html')
 
@@ -42,7 +37,7 @@ def make_web():
     ai services
     '''
 
-    @_app.route('/appearance')
+    @app.route('/appearance')
     def get_people():
         from_time = request.args.get('from')
         if from_time is not None:
@@ -80,7 +75,7 @@ def make_web():
     camera services
     '''
 
-    @_app.route('/camera', methods=['GET'])
+    @app.route('/camera', methods=['GET'])
     def get_camera():
         camera_id = request.args.get('id')
 
@@ -93,10 +88,10 @@ def make_web():
 
         return {"data": data}
 
-    @_app.route('/stream/', methods=['POST'])
+    @app.route('/stream/', methods=['POST'])
     def stream():
         data = request.json
-        configs = lookup_rule(data)
+        configs = GlobalConfigs.instance().lookup_rule(data)
         configs['camera_id'] = data['camera_id']
         configs['name'] = data['name']
         start_camera_analysis(configs)
@@ -117,7 +112,7 @@ def make_web():
         else:
             yield b'--\r\n'
 
-    @_app.route('/video')
+    @app.route('/video')
     def video():
         if request.args.get('analysis_id') is not None:
             return Response(gen(get_channel('analysis'), request.args.get('analysis_id')),
@@ -126,7 +121,7 @@ def make_web():
             return Response(gen(get_channel('stream'), request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    @_app.route('/camera/', methods=['POST'])
+    @app.route('/camera/', methods=['POST'])
     def add_camera():
         json = request.json
         database.insert_one('camera', json)
@@ -138,9 +133,8 @@ def make_web():
     iot services
     '''
 
-    @_app.route('/traffic', methods=['GET'])
+    @app.route('/traffic', methods=['GET'])
     def get_predict_traffic():
         pass
 
-    meta = get_configs('meta')
-    _app.run(host='0.0.0.0', port=meta['port'], threaded=True)
+    app.run(port=GlobalConfigs.instance().get_port(), threaded=True)

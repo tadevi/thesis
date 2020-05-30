@@ -2,7 +2,8 @@ from queue import Queue
 
 from modules.base import Map
 from modules.network import Network
-from modules.utils import log, get_configs, get_node_ip
+from modules.utils import log
+from resource_manager.GlobalConfigs import GlobalConfigs
 from server.channel import add_to_channel_analysis, add_to_channel_stream
 
 
@@ -14,12 +15,11 @@ class Main(Map):
             add_to_channel_stream(self.configs['camera_id'], self.queue)
 
     def push_to_cloud(self):
-        node_config = get_configs('meta')
         network_module = Network({})
         d = {}
 
-        node_url = get_node_ip()
-        port = node_config['port']
+        node_url = GlobalConfigs.instance().get_node_ip()
+        port = GlobalConfigs.instance().get_port()
         camera_id = self.configs['camera_id']
         if self.configs.get('type') == "stream":
             add_to_channel_stream(self.configs['camera_id'], self.queue)

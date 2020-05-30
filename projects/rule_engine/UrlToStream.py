@@ -1,8 +1,10 @@
-from time import sleep
+import traceback
 
+import pafy
 import youtube_dl
 from cv2 import cv2
-import pafy
+
+from modules.utils import log
 
 
 def youtube_to_stream(url):
@@ -44,9 +46,6 @@ class UrlToStream:
 
     def get(self):
         try:
-            if self.configs.get('demo') and self.configs.get('sleep'):
-                sleep(self.configs.get('sleep'))
-
             _, frame = self.cam.read()
 
             if frame is None and self.configs.get('demo'):
@@ -54,4 +53,5 @@ class UrlToStream:
                 _, frame = self.cam.read()
             return frame
         except:
+            log.e('UrlToStream', traceback.format_exc())
             return None

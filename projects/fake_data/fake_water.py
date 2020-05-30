@@ -4,6 +4,8 @@ import time
 from modules.network import Network
 from modules import utils
 from modules.utils import log
+from resource_manager.ThreadPool import ThreadPool
+from resource_manager.ThreadTask import ThreadTask
 
 tag = "WaterDataFaker"
 
@@ -16,8 +18,7 @@ class WaterDataFaker:
         self.interval = interval
 
     def start_posting_fake_data(self):
-        t1 = threading.Thread(target=self.__post_fake_data)
-        t1.start()
+        ThreadPool().get_thread().put_job(ThreadTask(self.__post_fake_data))
 
     def __post_fake_data(self):
         while not self.is_canceled:
