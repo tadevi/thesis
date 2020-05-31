@@ -49,7 +49,7 @@ class Main(Map):
 
     def run(self, inputs):
         super(Main, self).run(inputs)
-        if not self.push:
+        if not self.push and not self.queue.empty():
             self.push_to_cloud()
             self.push = True
 

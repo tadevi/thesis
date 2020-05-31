@@ -37,7 +37,7 @@ def make_web():
     ai services
     '''
 
-    @app.route('/appearance')
+    @app.route('/appearance', methods=['GET'])
     def get_people():
         from_time = request.args.get('from')
         if from_time is not None:
@@ -70,6 +70,14 @@ def make_web():
                                     ]})
 
         return {"data": [utils.json_encode(document) for document in cursor]}
+
+    @app.route('/appearance', methods=['POST'])
+    def save_appearance():
+        json = request.json
+        database.insert_one('appearance', json)
+        return {
+            "status": "success"
+        }
 
     '''
     camera services

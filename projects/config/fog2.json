@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "name": "Fog 2-1",
+    "layer": 2,
+    "storage": 5000,
+    "port": 3000
+  },
+  "rules": [
+    {
+      "data_type": "stream",
+      "name": "traffic_camera",
+      "modules": [
+        {
+          "package": "modules.image",
+          "name": "face_recognition",
+          "configs": {
+            "layer": 2,
+            "cloud_url": "http://localhost:4000"
+          }
+        },
+        {
+          "package": "modules.stream",
+          "name": "mjpeg",
+          "configs": {
+            "cloud_url": "http://localhost:4000",
+            "type": "analysis"
+          }
+        }
+      ]
+    }
+  ],
+  "start_up": [
+    {
+      "name": "traffic_camera",
+      "url": "https://www.youtube.com/watch?v=7WpyIYLgYFg",
+      "type": "mjpeg",
+      "camera_id": "0",
+      "demo": "true"
+    }
+  ]
+}

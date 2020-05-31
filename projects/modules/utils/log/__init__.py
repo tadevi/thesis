@@ -7,7 +7,7 @@ LOG_MODE_ERROR = 2
 
 LOG_MODE_NONE = 3
 
-log_mode = 1
+log_mode = 0
 
 
 class bcolors:

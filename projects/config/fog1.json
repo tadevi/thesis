@@ -1,3 +1,4 @@
+
 {
   "meta": {
     "name": "Fog 1-1",
@@ -30,14 +31,6 @@
       "name": "traffic_camera",
       "modules": [
         {
-          "package": "modules.stream",
-          "name": "mjpeg",
-          "configs": {
-            "cloud_url": "http://34.87.93.24:3000",
-            "type": "stream"
-          }
-        },
-        {
           "package": "modules.image",
           "name": "human_detection",
           "configs": {}
@@ -46,7 +39,16 @@
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "type": "analysis"
+            "cloud_url": "http://35.189.28.144:3000",
+            "type": "stream"
+          }
+        },
+        {
+          "package": "modules.stream",
+          "name": "mjpeg",
+          "configs": {
+            "type": "analysis",
+            "cloud_url": "http://34.87.93.24:3000"
           }
         }
       ]
@@ -69,7 +71,15 @@
       ]
     }
   ],
-  "start_up":[],
+  "start_up": [
+    {
+      "name": "traffic_camera",
+      "url": "https://www.youtube.com/watch?v=7WpyIYLgYFg",
+      "type": "mjpeg",
+      "camera_id": "0",
+      "demo": "true"
+    }
+  ],
   "database": {
     "mongo_url": "mongodb://localhost:27017/",
     "db_name": "iot-db"

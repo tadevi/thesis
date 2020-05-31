@@ -12,9 +12,10 @@ import pymongo
 import numpy as np
 
 from modules import utils
-from modules.base import Map
+from modules.base import Filter
 from modules.utils import log
 from modules.utils import storage
+from modules.network import Network
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 face_storage_path = os.path.join(parent_folder_path, "face_db")
@@ -37,11 +38,20 @@ tag = "Face recognition"
 log.i(tag, "loaded all", len(known_face_encodings), "known faces")
 
 
-class Main(Map):
+class Main(Filter):
     DROP_FRAME = 5
 
     def __init__(self, configs: dict):
         self.configs = configs
+        if configs.get("layer") == 2:
+            self.network = Network({})
+        else:
+            self.storage = storage.Main({
+                "mongo_url": configs.get("mongo_url"),
+                "db_name": configs.get("db_name"),
+                "col_name": configs.get("col_name"),
+            })
+
         # format:
         # {
         #     "id"
@@ -50,11 +60,6 @@ class Main(Map):
         # }
         self.appearing_people = {}
         self.timers = {}
-        self.storage = storage.Main({
-            "mongo_url": configs.get("mongo_url"),
-            "db_name": configs.get("db_name"),
-            "col_name": configs.get("col_name"),
-        })
 
         self.face_locations = []
         self.face_encodings = []
@@ -64,6 +69,8 @@ class Main(Map):
         self.process_frame = 1
 
     def run(self, input: np.ndarray):
+        unrecognized_people_count = 0
+
         if self.process_frame == Main.DROP_FRAME:
             self.process_frame = 1
             start_time = time.time()
@@ -71,7 +78,6 @@ class Main(Map):
             self.face_encodings = face_recognition.face_encodings(input, self.face_locations)
             self.recognized_profile_indices.clear()
             self.face_names.clear()
-            unrecognized_people_count = 0
 
             for face_encoding in self.face_encodings:
                 matches = face_recognition.compare_faces(known_face_encodings, face_encoding)
@@ -82,7 +88,7 @@ class Main(Map):
                     self.recognized_profile_indices.add(best_match_index)
                 else:
                     name = "unknown"
-                    unrecognized_people_count+=1
+                    unrecognized_people_count += 1
                 self.face_names.append(name)
 
             recognized_profiles = {profiles[i]["id"]: profiles[i] for i in self.recognized_profile_indices}
@@ -99,7 +105,9 @@ class Main(Map):
 
         self.process_frame += 1
 
-        return draw_result_on_frame(input, self.face_locations, self.face_names)
+        if self.configs.get("layer") == 3:
+            draw_result_on_frame(input, self.face_locations, self.face_names)
+        return unrecognized_people_count > 0
 
     def store_records(self, profiles: dict):
         for id, profile in profiles.items():
@@ -121,7 +129,10 @@ class Main(Map):
             timer.start()
 
     def store_record(self, record):
-        self.storage.run(record)
+        if self.configs.get("layer") == 2:
+            self.network.post(self.configs["cloud_url"] + "/appearance", record)
+        else:
+            self.storage.run(record)
         self.appearing_people.pop(record["id"], None)
 
 

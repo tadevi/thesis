@@ -26,6 +26,8 @@ class GlobalConfigs(metaclass=Singleton):
         if self.config is None:
             with open(config_path, 'r') as f:
                 self.config = json.load(f)
+                port = self.config.get("meta").get("port")
+                self.set_port(port if port is not None else 3000)
 
     def assert_config(self):
         if self.config is None:
