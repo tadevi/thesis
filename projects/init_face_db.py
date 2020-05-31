@@ -11,7 +11,8 @@ col.insert_many([
     {"id": "8d5ce536-e734-4f3b-8151-e02168ff4eac", "name": "Than Duc Tai", "age": 22},
     {"id": "5ba85527-e583-4234-aa4a-609a964a73ba", "name": "Luong Tuan Kiet", "age": 23},
     {"id": "50fc43f4-f122-4d6a-b4d3-552385b65403", "name": "Key", "age": 42},
-    {"id": "17eb17f0-325f-496c-b8ee-6b4eb45c55b7", "name": "Erik", "age": 23}
+    {"id": "17eb17f0-325f-496c-b8ee-6b4eb45c55b7", "name": "Erik", "age": 23},
+    {"id": "peel", "name": "Peele", "age": 56}
 ])
 
 print("stop init face db")
