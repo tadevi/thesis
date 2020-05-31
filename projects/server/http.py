@@ -19,7 +19,6 @@ def start_up():
         start_camera_analysis(configs)
 
 
-
 app = Flask(__name__)
 
 
@@ -130,4 +129,4 @@ def fog_data():
 
 def make_web():
     start_up()
-    app.run(port=GlobalConfigs.instance().get_port(), threaded=True)
+    app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)

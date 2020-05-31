@@ -145,4 +145,4 @@ def make_web():
     def get_predict_traffic():
         pass
 
-    app.run(port=GlobalConfigs.instance().get_port(), threaded=True)
+    app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)
