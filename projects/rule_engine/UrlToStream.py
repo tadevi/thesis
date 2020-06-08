@@ -6,6 +6,9 @@ from cv2 import cv2
 
 from modules.utils import log
 
+TOTAL_DATA = 0
+LAST_TOTAL_PRINTED = 0
+
 
 def youtube_to_stream(url):
     ydl_opts = {}
@@ -45,12 +48,23 @@ class UrlToStream:
             self.cam = cv2.VideoCapture(url)
 
     def get(self):
+        global TOTAL_DATA
+        global LAST_TOTAL_PRINTED
         try:
             _, frame = self.cam.read()
+            # if frame is None and self.configs.get('demo'):
+            #     self.init_cam()
+            #     _, frame = self.cam.read()
 
-            if frame is None and self.configs.get('demo'):
-                self.init_cam()
-                _, frame = self.cam.read()
+            if frame is not None:
+                height, width, depth = frame.shape
+                TOTAL_DATA += height * width * depth
+            else:
+                cur_total = TOTAL_DATA / (1024 * 1024)
+                if cur_total != LAST_TOTAL_PRINTED:
+                    LAST_TOTAL_PRINTED = cur_total
+                    print("Handled total", "{:.2f}".format(LAST_TOTAL_PRINTED), "(MB) data")
+
             return frame
         except:
             log.e('UrlToStream', traceback.format_exc())

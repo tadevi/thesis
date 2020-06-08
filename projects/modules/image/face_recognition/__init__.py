@@ -39,7 +39,7 @@ log.i(tag, "loaded all", len(known_face_encodings), "known faces")
 
 
 class Main(Filter):
-    DROP_FRAME = 5
+    DROP_FRAME = 1
 
     def __init__(self, configs: dict):
         self.configs = configs
@@ -103,7 +103,7 @@ class Main(Filter):
 
             self.store_records(recognized_profiles)
 
-        self.process_frame += 1
+        #self.process_frame += 1
 
         if self.configs.get("layer") == 3:
             draw_result_on_frame(input, self.face_locations, self.face_names)
