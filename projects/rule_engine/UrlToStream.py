@@ -52,9 +52,6 @@ class UrlToStream:
         global LAST_TOTAL_PRINTED
         try:
             _, frame = self.cam.read()
-            # if frame is None and self.configs.get('demo'):
-            #     self.init_cam()
-            #     _, frame = self.cam.read()
 
             if frame is not None:
                 height, width, depth = frame.shape

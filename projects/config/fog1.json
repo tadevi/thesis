@@ -1,11 +1,4 @@
-
 {
-  "meta": {
-    "name": "Fog 1-1",
-    "layer": 1,
-    "storage": 1000,
-    "port": 3000
-  },
   "rules": [
     {
       "data_type": "scalar",
@@ -39,7 +32,7 @@
           "package": "modules.stream",
           "name": "mjpeg",
           "configs": {
-            "cloud_url": "http://52.187.168.184:3000",
+            "cloud_url": "http://cloud_ip:3000",
             "type": "stream"
           }
         },
@@ -48,7 +41,7 @@
           "name": "mjpeg",
           "configs": {
             "type": "analysis",
-            "cloud_url": "http://35.189.28.144:3000"
+            "cloud_url": "http://fog2_ip:3000"
           }
         }
       ]
@@ -65,7 +58,7 @@
           "package": "modules.text.water",
           "name": "send_to_cloud",
           "configs": {
-            "cloud_url": "http://52.187.168.184:3000"
+            "cloud_url": "http://cloud_ip:3000"
           }
         }
       ]

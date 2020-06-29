@@ -1,0 +1,36 @@
+{
+  "layers": {
+    "1": [
+      {
+        "ip": "localhost",
+        "port": "3000"
+      },
+      {
+        "ip": "localhost",
+        "port": "3001"
+      },
+      {
+        "ip": "localhost",
+        "port": "3002"
+      },
+      {
+        "ip": "localhost",
+        "port": "3003"
+      }
+    ],
+    "2": [
+      {
+        "ip": "localhost",
+        "port": "4000"
+      },
+      {
+        "ip": "localhost",
+        "port": "4001"
+      }
+    ],
+    "cloud": {
+        "ip": "localhost",
+        "port": "5000"
+      }
+  }
+}

@@ -145,4 +145,29 @@ def make_web():
     def get_predict_traffic():
         pass
 
+    @app.route('/config', methods=['GET'])
+    def get_config():
+        layer = int(request.args.get('layer'))
+        position = int(request.args.get('position'))
+
+        if None not in [layer, position]:
+            nodes_ip = GlobalConfigs.instance().nodes_ip.get("layers")
+            layer1_count = len(nodes_ip.get("1"))
+            layer2_count = len(nodes_ip.get("2"))
+            cloud_ip = nodes_ip.get("cloud").get("ip")
+            cloud_port = nodes_ip.get("cloud").get("port")
+
+            if layer == 1:
+                index = int((position - 1) / (layer1_count / layer2_count))
+                fog2_ip = nodes_ip.get("2")[index].get("ip")
+                fog2_port = nodes_ip.get("2")[index].get("port")
+                config = GlobalConfigs.instance().get_fog1_config(fog2_ip, fog2_port, cloud_ip, cloud_port)
+            else:  # = 2
+                config = GlobalConfigs.instance().get_fog2_config(cloud_ip, cloud_port)
+
+            return config
+
+        else:
+            return {}
+
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)

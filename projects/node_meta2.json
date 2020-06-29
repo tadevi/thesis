@@ -1,0 +1,8 @@
+{
+  "name": "Random Node",
+  "id": "2.1",
+  "storage": 5000,
+  "port": 4000,
+  "cloud_url": "http://localhost:5000",
+  "is_cloud": false
+}
