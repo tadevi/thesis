@@ -1,8 +1,9 @@
 {
-  "name": "Random Node",
-  "id": "2.1",
-  "storage": 5000,
-  "port": 4000,
-  "cloud_url": "http://localhost:5000",
-  "is_cloud": false
+    "name": "Random Node",
+    "id": "2.1",
+    "storage": 5000,
+    "port": 4000,
+    "cloud_url": "http://localhost:5000",
+    "is_cloud": false,
+    "last_update_time": 1594114540662
 }

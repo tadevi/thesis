@@ -1,9 +1,12 @@
 import json
+import os
+from pathlib import Path
 
 from bson import ObjectId
 from cv2 import cv2
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, send_from_directory
 
+from gen_update import gen_update
 from modules import utils
 from modules.utils import storage
 from resource_manager.GlobalConfigs import GlobalConfigs
@@ -169,5 +172,22 @@ def make_web():
 
         else:
             return {}
+
+    @app.route('/last_update', methods=['GET'])
+    def get_last_update():
+        return {
+            "last_update_time": GlobalConfigs.instance().last_update_time
+        }
+
+    @app.route('/update', methods=['GET'])
+    def get_update():
+        project_root = GlobalConfigs.instance().project_root
+        modules_zip_path = os.path.join(project_root, "modules.zip")
+        modules_zip_file = Path(modules_zip_path)
+        if not modules_zip_file.is_file():
+            gen_update()
+        response = send_from_directory(directory=project_root, filename='modules.zip')
+        response.headers['last_update_time'] = GlobalConfigs.instance().last_update_time
+        return response
 
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)

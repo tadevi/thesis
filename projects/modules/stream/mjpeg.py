@@ -43,7 +43,7 @@ class Main(Map):
 
     def __init__(self, configs):
         self.configs = configs
-        self.queue = Queue(maxsize=0)
+        self.queue = Queue(maxsize=1)
         self.broadcast_stream()
         self.push = False
 

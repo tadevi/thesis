@@ -53,3 +53,11 @@ class Network:
         except:
             log.e("Network", traceback.format_exc())
             return self.response_with(-1, "Something went wrong")
+
+    def download_file(self, save_path, url, params=None):
+        response = requests.get(url, params=params, allow_redirects=True)
+        open(save_path, 'wb').write(response.content)
+        log.i(tag, "Downloaded file from url", url, "\nwith params:", params, "\nstatus code:", response.status_code,
+              "\nreason:",
+              response.reason, "\nsave_path:", save_path)
+        return response
