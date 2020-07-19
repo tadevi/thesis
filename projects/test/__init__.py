@@ -2,7 +2,7 @@ import os
 
 from cv2 import cv2
 
-from modules.utils import log
+from modules import log
 
 tag = "Test"
 
@@ -27,7 +27,7 @@ def run():
 
 def test_validate_and_storage():
     from datetime import datetime
-    from modules.utils import storage
+    from modules import storage
     from modules.text.gps import validate
 
     gps_data1 = {
@@ -89,11 +89,9 @@ def test_human_detection():
 def test_camera_flow():
     import modules.image.human_detection as human_detection_pkg
     import modules.image.face_recognition as face_recognition_pkg
-    import modules.image.face_extraction as face_extraction_pkg
     import numpy as np
 
     human_detection_module = human_detection_pkg.Main({})
-    face_extraction_module = face_extraction_pkg.Main({})
     face_recognition_module = face_recognition_pkg.Main({
         "col_name": "appearance"
     })
@@ -108,7 +106,7 @@ def test_camera_flow():
         # Convert the image from BGR color (which OpenCV uses) to RGB color (which face_recognition uses)
         input = np.array(input[:, :, ::-1])
 
-        if human_detection_module.run(input) and face_extraction_module.run(input):
+        if human_detection_module.run(input):
             face_recognition_module.run(input)
 
         cv2.imshow('Video', input)
@@ -121,15 +119,16 @@ def test_camera_flow():
 
 
 def test_gps_flow():
-    from protocols.http import make_web
+    from server.http import make_web
     import threading
+    from modules.network import Network
+    from modules import utils
 
     t = threading.Thread(target=make_web)
     t.daemon = True
     t.start()
 
-    from modules import network
-    network_module = network.Main({})
+    network_module = Network({})
 
     is_post = True
 
@@ -155,13 +154,13 @@ def test_gps_flow():
 def test_cloud_http():
     from server.cloud_http import make_web
     import threading
+    from modules.network import Network
 
     t = threading.Thread(target=make_web)
     t.daemon = True
     t.start()
 
-    from modules import network
-    network_module = network.Main({})
+    network_module = Network({})
 
     while True:
         input("Press Enter to send GET\n")
@@ -175,13 +174,13 @@ def test_cloud_http():
 def test_post_camera_cloud():
     from server.cloud_http import make_web
     import threading
+    from modules.network import Network
 
     t = threading.Thread(target=make_web)
     t.daemon = True
     t.start()
 
-    from modules import network
-    network_module = network.Main({})
+    network_module = Network({})
 
     while True:
         input("Press Enter to send POST\n")
@@ -215,12 +214,12 @@ def test_post_fake_data():
 def test_fog1_stream():
     from server.http import make_web
     import threading
-    from modules import network
+    from modules.network import Network
 
     t = threading.Thread(target=make_web)
     t.start()
 
-    network_module = network.Network({})
+    network_module = Network({})
 
     input("ENTER to post stream meta to fog1\n")
     network_module.post("http://localhost:3000/stream/",

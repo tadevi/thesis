@@ -2,10 +2,11 @@ import json
 import os
 import shutil
 import zipfile
+from pathlib import Path
 
 from resource_manager.Singleton import Singleton
 from modules.network import Network
-from modules.utils import log, get_ip
+from modules import utils, log
 
 tag = "GlobalConfigs"
 
@@ -23,7 +24,7 @@ class GlobalConfigs(metaclass=Singleton):
         self.node_meta_name = "node_meta.json"
         self.project_root = None
 
-    def init_configs(self):
+    def init_node(self):
         with open(self.node_meta_name, 'r') as f:
             meta = json.load(f)
             id = meta.get("id")
@@ -41,22 +42,52 @@ class GlobalConfigs(metaclass=Singleton):
             with open("nodes_ip.json", 'r') as f:
                 self.nodes_ip = json.load(f)
 
-            with open("config/cloud.json", 'r') as f:
-                self.config = json.load(f)
+            """
+            <-- self.config -->
+            {
+                ...,
+                rules: {
+                    gps: [
+                        {
+                            data_type: ...,
+                            name: ...,
+                            modules: [...]
+                        },
+                        {
+                            data_type: ...,
+                            name: ...,
+                            modules: [...]
+                        },
+                        ...
+                    ],
+                    traffic_camera: [...],
+                    ...
+                }
+            }
+            """
+            self.config = self.parse_config("cloud")
         else:
+            config_name = "fog" + str(self.layer)
             network = Network({})
 
-            res = network.get(self.cloud_url + "/config", {
-                "layer": self.layer,
-                "position": self.position
-            })
-            self.config = res.get("data")
-
-            log.v(self.tag, "Obtained config from cloud:\n", self.config)
-
             res = network.get(self.cloud_url + "/last_update")
-            last_update_time = res.get("data").get("last_update_time")
+            if res.get('status_code') != 200:
+                log.v(self.tag, "Cannot connect to Cloud")
+                last_update_time = self.last_update_time
+            else:
+                last_update_time = res.get("data").get("last_update_time")
+
             if last_update_time != self.last_update_time:
+                res = network.get(self.cloud_url + "/config", {
+                    "layer": self.layer,
+                    "position": self.position
+                })
+                self.config = res.get("data")
+
+                log.v(self.tag, "Obtained config from cloud:\n", self.config)
+
+                self.cache_configs(config_name, self.config)
+
                 modules_zip_path = os.path.join(self.project_root, "modules_download.zip")
                 res = network.download_file(save_path=modules_zip_path, url=self.cloud_url + "/update")
 
@@ -79,11 +110,33 @@ class GlobalConfigs(metaclass=Singleton):
                     json.dump(meta, f, indent=4)
                 log.v(tag, "Last update time:", last_update_time)
             else:
-                log.v(tag, "No update needed")
+                log.v(tag, "No update needed, use local configs and modules")
 
-        self.ip = get_ip()
+                self.config = self.parse_config(config_name, folder_name="config_cache")
+
+        self.ip = utils.get_ip()
 
         log.v(self.tag, "Resolved IP Address:", self.ip)
+
+    def cache_configs(self, config_name, configs):
+        config_cache_folder_relative_path = "config_cache" + "/" + config_name
+
+        rules = configs['rules']
+        configs = {x: configs[x] for x in configs if x != 'rules'}
+
+        config_cache_folder = os.path.join(self.project_root, config_cache_folder_relative_path)
+        Path(config_cache_folder).mkdir(parents=True, exist_ok=True)
+        with open(config_cache_folder_relative_path + "/" + config_name + ".json", 'w') as f:
+            json.dump(configs, f, indent=4)
+
+        rules_name = list(rules.keys())
+        for rule_name in rules_name:
+            Path(config_cache_folder+"/"+rule_name).mkdir(parents=True, exist_ok=True)
+            rule_files_name = ["rule"+str(i)+".json" for i in range(1, len(rules[rule_name])+1)]
+            for idx, rule_file_name in enumerate(rule_files_name):
+                with open(config_cache_folder_relative_path + "/" + rule_name + "/" + rule_file_name, 'w') as f:
+                    json.dump(rules[rule_name][idx], f, indent=4)
+        log.v(tag, "Cached configs")
 
     def get_port(self):
         return self.port
@@ -102,37 +155,54 @@ class GlobalConfigs(metaclass=Singleton):
         else:
             return self.config.get(name)
 
-    def lookup_rule(self, data):
+    def lookup_rules(self, rule_name):
         self.assert_config()
-        rules = self.config.get('rules')
+        rules = self.config.get('rules').get(rule_name)
 
-        rules = list(filter(lambda x: x['name'] == data['name'], rules))
-        if len(rules) == 1:
-            return {
-                **rules[0],
-                **data
-            }
+        if len(rules) > 0:
+            return rules
         else:
-            raise Exception("Rule with name " + data['name'] + " not found!")
+            raise Exception("Rule with name " + rule_name + " not found!")
 
     def get_fog1_config(self, fog2_ip, fog2_port, cloud_ip, cloud_port):
-        with open("config/fog1.json", 'r') as f:
-            config = json.load(f)
-            config.get("rules")[1].get("modules")[1].get("configs")["cloud_url"] = self.get_base_url(cloud_ip,
-                                                                                                     cloud_port)
-            config.get("rules")[1].get("modules")[2].get("configs")["cloud_url"] = self.get_base_url(fog2_ip, fog2_port)
-            config.get("rules")[2].get("modules")[1].get("configs")["cloud_url"] = self.get_base_url(cloud_ip,
-                                                                                                     cloud_port)
-            return config
+        return self.parse_config("fog1", cloud_ip, cloud_port, fog2_ip, fog2_port)
 
     def get_fog2_config(self, cloud_ip, cloud_port):
-        with open("config/fog2.json", 'r') as f:
+        return self.parse_config("fog2", cloud_ip, cloud_port)
+
+    def parse_config(self, config_name, cloud_ip=None, cloud_port=None, fog2_ip=None, fog2_port=None, folder_name="config"):
+        cloud_url = self.get_base_url(cloud_ip, cloud_port)
+        fog2_url = self.get_base_url(fog2_ip, fog2_port)
+
+        config_folder_relative_path = folder_name + "/" + config_name
+
+        with open(config_folder_relative_path + "/" + config_name + ".json", 'r') as f:
             config = json.load(f)
-            config.get("rules")[0].get("modules")[0].get("configs")["cloud_url"] = self.get_base_url(cloud_ip,
-                                                                                                     cloud_port)
-            config.get("rules")[0].get("modules")[1].get("configs")["cloud_url"] = self.get_base_url(cloud_ip,
-                                                                                                     cloud_port)
-            return config
+
+        config['rules'] = {}
+        config_folder = os.path.join(self.project_root, config_folder_relative_path)
+        rules_name = next(os.walk(config_folder))[1]
+        for rule_name in rules_name:
+            config['rules'][rule_name] = []
+            rule_folder = os.path.join(config_folder, rule_name)
+            rule_files_name = next(os.walk(rule_folder))[2]
+            for rule_file_name in rule_files_name:
+                with open(config_folder_relative_path + "/" + rule_name + "/" + rule_file_name, 'r') as f:
+                    rule = json.load(f)
+
+                    for module in rule['modules']:
+                        if module.get('configs') is not None:
+                            if module.get('configs').get('cloud_url') is not None and cloud_url is not None:
+                                module.get('configs')['cloud_url'] = cloud_url
+                            elif module.get('configs').get('fog2_url') is not None and fog2_url is not None:
+                                module.get('configs')['fog2_url'] = fog2_url
+
+                    config['rules'][rule_name].append(rule)
+
+        return config
 
     def get_base_url(self, ip, port):
-        return "http://" + ip + ":" + port
+        if ip is not None and port is not None:
+            return "http://" + ip + ":" + port
+        else:
+            return None

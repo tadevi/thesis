@@ -9,8 +9,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+from modules import log
 from modules.base import Filter
-from modules.utils import log
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 graph_path = os.path.join(parent_folder_path, "frozen_inference_graph.pb")

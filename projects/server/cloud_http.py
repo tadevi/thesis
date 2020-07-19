@@ -7,11 +7,10 @@ from cv2 import cv2
 from flask import Flask, render_template, request, Response, send_from_directory
 
 from gen_update import gen_update
-from modules import utils
-from modules.utils import storage
+from modules import utils, storage
 from resource_manager.GlobalConfigs import GlobalConfigs
+from rule_engine import RuleEngine
 from server.channel import get_channel
-from server.http import start_camera_analysis
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -101,11 +100,9 @@ def make_web():
 
     @app.route('/stream/', methods=['POST'])
     def stream():
-        data = request.json
-        configs = GlobalConfigs.instance().lookup_rule(data)
-        configs['camera_id'] = data['camera_id']
-        configs['name'] = data['name']
-        start_camera_analysis(configs)
+        input = request.json
+        rules = GlobalConfigs.instance().lookup_rules(input['name'])
+        RuleEngine.instance().run(rules, input)
         return {
             "status": "success"
         }

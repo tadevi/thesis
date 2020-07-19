@@ -6,8 +6,8 @@ import zipfile
 from resource_manager.GlobalConfigs import GlobalConfigs
 
 
-def gen_update():
-    zip_modules()
+def gen_update(project_root=GlobalConfigs.instance().project_root):
+    zip_modules(project_root)
 
     with open("node_meta3.json", 'r') as f:
         meta = json.load(f)
@@ -19,8 +19,7 @@ def gen_update():
     print("zipping modules done")
 
 
-def zip_modules():
-    project_root = GlobalConfigs.instance().project_root
+def zip_modules(project_root):
     modules_path = os.path.join(project_root, "modules")
 
     zipf = zipfile.ZipFile('modules.zip', 'w', zipfile.ZIP_DEFLATED)
@@ -31,4 +30,5 @@ def zip_modules():
 
 
 if __name__ == "__main__":
-    gen_update()
+    project_root = os.path.dirname(os.path.abspath(__file__))
+    gen_update(project_root)

@@ -1,9 +1,7 @@
 import random
-import threading
 import time
 from modules.network import Network
-from modules import utils
-from modules.utils import log
+from modules import utils, log
 from resource_manager.ThreadPool import ThreadPool
 from resource_manager.ThreadTask import ThreadTask
 

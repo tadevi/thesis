@@ -1,6 +1,6 @@
 from threading import Thread
 
-from modules.utils import log
+from modules import log
 from resource_manager.Singleton import Singleton
 from resource_manager.ThreadInstance import ThreadInstance
 

@@ -4,7 +4,7 @@ import pafy
 import youtube_dl
 from cv2 import cv2
 
-from modules.utils import log
+from modules import log
 
 TOTAL_DATA = 0
 LAST_TOTAL_PRINTED = 0

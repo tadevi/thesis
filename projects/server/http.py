@@ -2,21 +2,15 @@ from cv2 import cv2
 from flask import *
 
 from resource_manager.GlobalConfigs import GlobalConfigs
-from resource_manager.ThreadPool import ThreadPool
-from rule_engine import HandleStream, HandleScalar
+from rule_engine import RuleEngine
 from server.channel import get_channel
 
 
-def start_camera_analysis(configs):
-    ThreadPool().get_thread().put_job(HandleStream(configs))
-
-
 def start_up():
-    start_up_cam = GlobalConfigs.instance().get_config('start_up')
-    for cam in start_up_cam:
-        configs = GlobalConfigs.instance().lookup_rule(cam)
-        configs = {**configs, **cam}
-        start_camera_analysis(configs)
+    start_up_inputs = GlobalConfigs.instance().get_config('start_up')
+    for input in start_up_inputs:
+        rules = GlobalConfigs.instance().lookup_rules(input['name'])
+        RuleEngine.instance().run(rules, input)
 
 
 app = Flask(__name__)
@@ -42,11 +36,9 @@ json body request have format:
 
 @app.route('/stream/', methods=['POST'])
 def stream():
-    data = request.json
-    configs = GlobalConfigs.instance().lookup_rule(data)
-    configs['camera_id'] = data['camera_id']
-    configs['name'] = data['name']
-    start_camera_analysis(configs)
+    input = request.json
+    rules = GlobalConfigs.instance().lookup_rules(input['name'])
+    RuleEngine.instance().run(rules, input)
     return {
         "status": "success"
     }
@@ -65,24 +57,17 @@ json body request have format:
 
 @app.route('/iot/', methods=['POST'])
 def iot_data():
-    data = request.json
-    configs = {
-        'name': data['name']
-    }
-    inputs = data['data']
+    json = request.json
+    rule_name = json['name']
+    input = json['data']
 
-    configs = GlobalConfigs.instance().lookup_rule(configs)
-    output = HandleScalar(configs).run(inputs)
-    if output is None:
-        return {
-            "status_code": 400,
-            "message": "Invalid input!"
-        }
-    else:
-        return {
-            "status_code": 200,
-            "message": "Server received your request!"
-        }
+    rules = GlobalConfigs.instance().lookup_rules(rule_name)
+
+    RuleEngine.instance().run(rules, input)
+    return {
+        "status_code": 200,
+        "message": "Server received your request!"
+    }
 
 
 def gen(channel, channel_id):

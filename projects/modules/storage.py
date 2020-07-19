@@ -8,7 +8,7 @@ from typing import Dict
 import pymongo
 
 from modules.base import Base
-from modules.utils import log
+from modules import log
 
 DEFAULT_MONGO_URL = "mongodb+srv://tai_than:tai_than123456@cluster0-osct2.mongodb.net/test?retryWrites=true&w=majority"
 DEFAULT_MONGO_DB = "iot-db"

@@ -1,7 +1,7 @@
 import traceback
 from queue import Queue
 
-from modules.utils import log
+from modules import log
 from resource_manager.ThreadTask import ThreadTask, ThreadTaskTerminate
 
 

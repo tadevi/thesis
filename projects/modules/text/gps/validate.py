@@ -9,7 +9,7 @@
 from typing import Dict
 
 from modules.base import Filter
-from modules.utils import log
+from modules import log
 
 tag = "Validate GPS"
 

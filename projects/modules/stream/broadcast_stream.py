@@ -1,7 +1,7 @@
 from queue import Queue
 
 from modules.base import Map
-from server.http import add_to_channel_analysis
+from server.channel import add_to_channel_analysis
 
 
 class Main(Map):

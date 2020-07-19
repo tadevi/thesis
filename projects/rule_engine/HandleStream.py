@@ -3,7 +3,6 @@ from importlib import import_module
 from modules.base import Filter, Map
 from resource_manager.ThreadTask import ThreadTask
 from rule_engine.UrlToStream import UrlToStream
-from server.channel import clear_from_channel
 
 
 def __getModule__(cam, module):
@@ -26,16 +25,13 @@ def __getModule__(cam, module):
 
 
 class HandleStream(ThreadTask):
-    def __init__(self, configs):
+    def __init__(self, configs, input):
         super().__init__()
         self.configs = configs
-        cam = {
-            'camera_id': configs['camera_id'],
-            'name': configs['name']
-        }
-        self.modules = list(map(lambda x: __getModule__(cam, x), configs['modules']))
+        self.input = input
+        self.modules = list(map(lambda x: __getModule__(self.input, x), configs))
 
-        self.url_to_stream = UrlToStream(configs)
+        self.url_to_stream = UrlToStream(self.input)
 
     def run(self):
         while True:

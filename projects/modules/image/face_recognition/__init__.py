@@ -11,11 +11,8 @@ import pymongo
 
 import numpy as np
 
-from modules import utils
+from modules import utils, storage, log, network
 from modules.base import Filter
-from modules.utils import log
-from modules.utils import storage
-from modules.network import Network
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
 face_storage_path = os.path.join(parent_folder_path, "face_db")
@@ -44,7 +41,7 @@ class Main(Filter):
     def __init__(self, configs: dict):
         self.configs = configs
         if configs.get("layer") == 2:
-            self.network = Network({})
+            self.network = network.Network({})
         else:
             self.storage = storage.Main({
                 "mongo_url": configs.get("mongo_url"),

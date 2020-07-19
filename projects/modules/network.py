@@ -8,7 +8,7 @@ from typing import Dict
 
 import requests
 
-from modules.utils import log
+from modules import log
 from resource_manager.ThreadPool import ThreadPool
 from resource_manager.ThreadTask import ThreadTask
 
