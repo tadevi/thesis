@@ -1,6 +1,7 @@
 import json
 import os
 import shutil
+import time
 import zipfile
 from pathlib import Path
 
@@ -27,96 +28,80 @@ class GlobalConfigs(metaclass=Singleton):
     def init_node(self):
         with open(self.node_meta_name, 'r') as f:
             meta = json.load(f)
-            id = meta.get("id")
-            self.layer, self.position = id.split('.')
-            self.layer = int(self.layer)
-            self.position = int(self.position)
-            self.name = meta.get("name")
-            self.storage = meta.get("storage")
-            self.port = meta.get("port")
-            self.cloud_url = meta.get("cloud_url")
-            self.is_cloud = meta.get("is_cloud")
-            self.last_update_time = meta.get("last_update_time")
+
+        id = meta.get("id")
+        self.layer, self.position = id.split('.')
+        self.layer = int(self.layer)
+        self.position = int(self.position)
+        self.name = meta.get("name")
+        self.storage = meta.get("storage")
+        self.port = meta.get("port")
+        self.cloud_url = meta.get("cloud_url")
+        self.is_cloud = meta.get("is_cloud")
+        self.last_update_time = meta.get("last_update_time")
+
+        self.ip = utils.get_ip()
+
+        log.v(self.tag, "Resolved IP Address:", self.ip)
 
         if self.is_cloud:
             with open("nodes_ip.json", 'r') as f:
                 self.nodes_ip = json.load(f)
 
-            """
-            <-- self.config -->
-            {
-                ...,
-                rules: {
-                    gps: [
-                        {
-                            data_type: ...,
-                            name: ...,
-                            modules: [...]
-                        },
-                        {
-                            data_type: ...,
-                            name: ...,
-                            modules: [...]
-                        },
-                        ...
-                    ],
-                    traffic_camera: [...],
-                    ...
-                }
-            }
-            """
             self.config = self.parse_config("cloud")
         else:
-            config_name = "fog" + str(self.layer)
-            network = Network({})
+            self.check_for_update()
 
-            res = network.get(self.cloud_url + "/last_update")
-            if res.get('status_code') != 200:
-                log.v(self.tag, "Cannot connect to Cloud")
-                last_update_time = self.last_update_time
-            else:
-                last_update_time = res.get("data").get("last_update_time")
+    def check_for_update(self):
+        config_name = "fog" + str(self.layer)
 
-            if last_update_time != self.last_update_time:
-                res = network.get(self.cloud_url + "/config", {
-                    "layer": self.layer,
-                    "position": self.position
-                })
-                self.config = res.get("data")
+        res = Network.instance().get(self.cloud_url + "/last_update")
+        if res.get('status_code') != 200:
+            log.v(self.tag, "Cannot connect to Cloud")
+            last_update_time = self.last_update_time
+        else:
+            last_update_time = res.get("data").get("last_update_time")
 
-                log.v(self.tag, "Obtained config from cloud:\n", self.config)
+        if last_update_time != self.last_update_time:
+            res = Network.instance().get(self.cloud_url + "/config", {
+                "layer": self.layer,
+                "position": self.position,
+                "ip": self.ip,
+                "port": self.port
+            })
+            self.config = res.get("data")
 
-                self.cache_configs(config_name, self.config)
+            log.v(self.tag, "Obtained config from cloud")
 
-                modules_zip_path = os.path.join(self.project_root, "modules_download.zip")
-                res = network.download_file(save_path=modules_zip_path, url=self.cloud_url + "/update")
+            self.cache_configs(config_name, self.config)
 
-                # delete modules folder
-                modules_path = os.path.join(self.project_root, "modules")
-                shutil.rmtree(modules_path)
-                log.v(tag, "Deleted", modules_path)
+            modules_zip_path = os.path.join(self.project_root, "modules_download.zip")
+            res = Network.instance().download_file(save_path=modules_zip_path, url=self.cloud_url + "/update")
 
-                # unzip
-                with zipfile.ZipFile(modules_zip_path, 'r') as zip_ref:
-                    zip_ref.extractall(self.project_root)
-                log.v(tag, "Extracted zip to", self.project_root)
+            # delete modules folder
+            # modules_path = os.path.join(self.project_root, "modules")
+            # shutil.rmtree(modules_path)
+            # log.v(tag, "Deleted", modules_path)
 
-                # update last_update_time
-                last_update_time = int(res.headers["last_update_time"])
-                self.last_update_time = last_update_time
-                meta["last_update_time"] = last_update_time
-                meta_path = os.path.join(self.project_root, self.node_meta_name)
-                with open(meta_path, 'w') as f:
-                    json.dump(meta, f, indent=4)
-                log.v(tag, "Last update time:", last_update_time)
-            else:
-                log.v(tag, "No update needed, use local configs and modules")
+            # unzip
+            with zipfile.ZipFile(modules_zip_path, 'r') as zip_ref:
+                zip_ref.extractall(self.project_root)
+            log.v(tag, "Extracted zip to", self.project_root)
 
-                self.config = self.parse_config(config_name, folder_name="config_cache")
+            # update last_update_time
+            self.last_update_time = int(res.headers["last_update_time"])
 
-        self.ip = utils.get_ip()
+            with open(self.node_meta_name, 'r') as f:
+                meta = json.load(f)
+            meta["last_update_time"] = self.last_update_time
+            meta_path = os.path.join(self.project_root, self.node_meta_name)
+            with open(meta_path, 'w') as f:
+                json.dump(meta, f, indent=4)
+            log.v(tag, "Last update time:", self.last_update_time)
+        else:
+            log.v(tag, "No update needed, use local configs and modules")
 
-        log.v(self.tag, "Resolved IP Address:", self.ip)
+            self.config = self.parse_config(config_name, folder_name="config_cache")
 
     def cache_configs(self, config_name, configs):
         config_cache_folder_relative_path = "config_cache" + "/" + config_name
@@ -164,15 +149,38 @@ class GlobalConfigs(metaclass=Singleton):
         else:
             raise Exception("Rule with name " + rule_name + " not found!")
 
-    def get_fog1_config(self, fog2_ip, fog2_port, cloud_ip, cloud_port):
+    def get_fog1_config(self, cloud_ip, cloud_port, fog2_ip, fog2_port):
         return self.parse_config("fog1", cloud_ip, cloud_port, fog2_ip, fog2_port)
 
     def get_fog2_config(self, cloud_ip, cloud_port):
         return self.parse_config("fog2", cloud_ip, cloud_port)
 
+    """
+        ### config format ###
+        {
+            ...,
+            rules: {
+                gps: [
+                    {
+                        data_type: ...,
+                        name: ...,
+                        modules: [...]
+                    },
+                    {
+                        data_type: ...,
+                        name: ...,
+                        modules: [...]
+                    },
+                    ...
+                ],
+                traffic_camera: [...],
+                ...
+            }
+        }
+    """
     def parse_config(self, config_name, cloud_ip=None, cloud_port=None, fog2_ip=None, fog2_port=None, folder_name="config"):
-        cloud_url = self.get_base_url(cloud_ip, cloud_port)
-        fog2_url = self.get_base_url(fog2_ip, fog2_port)
+        cloud_url = utils.get_base_url(cloud_ip, cloud_port)
+        fog2_url = utils.get_base_url(fog2_ip, fog2_port)
 
         config_folder_relative_path = folder_name + "/" + config_name
 
@@ -201,8 +209,39 @@ class GlobalConfigs(metaclass=Singleton):
 
         return config
 
-    def get_base_url(self, ip, port):
-        if ip is not None and port is not None:
-            return "http://" + ip + ":" + port
-        else:
-            return None
+    def gen_and_request_update(self):
+        self.gen_update()
+        self.request_update()
+
+    def gen_update(self):
+        self.zip_modules()
+
+        with open("node_meta3.json", 'r') as f:
+            meta = json.load(f)
+
+        meta["last_update_time"] = int(round(time.time() * 1000))
+        self.last_update_time = meta["last_update_time"]
+
+        with open('node_meta3.json', 'w') as f:
+            json.dump(meta, f, indent=4)
+
+        log.v(tag, "Updated last_update_time:", meta['last_update_time'])
+
+    def zip_modules(self):
+        modules_path = os.path.join(self.project_root, "modules")
+
+        zipf = zipfile.ZipFile('modules.zip', 'w', zipfile.ZIP_DEFLATED)
+        for root, dirs, files in os.walk(modules_path):
+            for file in files:
+                zipf.write(os.path.join(os.path.relpath(root, GlobalConfigs.instance().project_root), file))
+        zipf.close()
+        log.v(tag, "zipping modules done")
+
+    def request_update(self):
+        layers = self.nodes_ip.get("layers")
+
+        for layer, layer_ips in layers.items():
+            if layer != "cloud":
+                for ip_port in layer_ips:
+                    request_url = utils.get_base_url(ip_port['ip'], ip_port['port']) + "/request_update"
+                    Network.instance().post(request_url)

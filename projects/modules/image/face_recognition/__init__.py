@@ -1,5 +1,7 @@
 import os
 
+from modules.network import Network
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import time
@@ -11,7 +13,7 @@ import pymongo
 
 import numpy as np
 
-from modules import utils, storage, log, network
+from modules import utils, storage, log
 from modules.base import Filter
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
@@ -40,9 +42,7 @@ class Main(Filter):
 
     def __init__(self, configs: dict):
         self.configs = configs
-        if configs.get("layer") == 2:
-            self.network = network.Network({})
-        else:
+        if configs.get("layer") != 2:
             self.storage = storage.Main({
                 "mongo_url": configs.get("mongo_url"),
                 "db_name": configs.get("db_name"),
@@ -127,7 +127,7 @@ class Main(Filter):
 
     def store_record(self, record):
         if self.configs.get("layer") == 2:
-            self.network.post(self.configs["cloud_url"] + "/appearance", record)
+            Network.instance().post(self.configs["cloud_url"] + "/appearance", record)
         else:
             self.storage.run(record)
         self.appearing_people.pop(record["id"], None)

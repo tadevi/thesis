@@ -6,11 +6,14 @@ from bson import ObjectId
 from cv2 import cv2
 from flask import Flask, render_template, request, Response, send_from_directory
 
-from gen_update import gen_update
-from modules import utils, storage
+from modules import utils, storage, log
 from resource_manager.GlobalConfigs import GlobalConfigs
+from resource_manager.ThreadPool import ThreadPool
+from resource_manager.ThreadTask import ThreadTask
 from rule_engine import RuleEngine
 from server.channel import get_channel
+
+tag = 'CLOUD HTTP'
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -147,11 +150,27 @@ def make_web():
 
     @app.route('/config', methods=['GET'])
     def get_config():
-        layer = int(request.args.get('layer'))
-        position = int(request.args.get('position'))
+        layer = request.args.get('layer')
+        position = request.args.get('position')
+        ip = request.args.get('ip')
+        port = request.args.get('port')
 
-        if None not in [layer, position]:
+        if None not in [layer, position, ip, port]:
             nodes_ip = GlobalConfigs.instance().nodes_ip.get("layers")
+            layer_ips = nodes_ip[layer]
+
+            layer = int(layer)
+            position = int(position)
+            port = int(port)
+
+            # if all((ip_port['ip'] != ip or ip_port['port'] != port for ip_port in layer_ips)):
+            #     layer_ips.append({
+            #         'ip': ip,
+            #         'port': port
+            #     })
+            #     log.v(tag, "added a new node at layer", layer, ", position", position, "with ip:", ip, ", port:",
+            #           port)
+
             layer1_count = len(nodes_ip.get("1"))
             layer2_count = len(nodes_ip.get("2"))
             cloud_ip = nodes_ip.get("cloud").get("ip")
@@ -161,7 +180,7 @@ def make_web():
                 index = int((position - 1) / (layer1_count / layer2_count))
                 fog2_ip = nodes_ip.get("2")[index].get("ip")
                 fog2_port = nodes_ip.get("2")[index].get("port")
-                config = GlobalConfigs.instance().get_fog1_config(fog2_ip, fog2_port, cloud_ip, cloud_port)
+                config = GlobalConfigs.instance().get_fog1_config(cloud_ip, cloud_port, fog2_ip, fog2_port)
             else:  # = 2
                 config = GlobalConfigs.instance().get_fog2_config(cloud_ip, cloud_port)
 
@@ -182,9 +201,18 @@ def make_web():
         modules_zip_path = os.path.join(project_root, "modules.zip")
         modules_zip_file = Path(modules_zip_path)
         if not modules_zip_file.is_file():
-            gen_update()
+            GlobalConfigs.instance().gen_update()
         response = send_from_directory(directory=project_root, filename='modules.zip')
         response.headers['last_update_time'] = GlobalConfigs.instance().last_update_time
         return response
+
+    @app.route('/gen_update', methods=['POST'])
+    def gen_update():
+        task = ThreadTask(run=GlobalConfigs.instance().gen_and_request_update)
+        ThreadPool.instance().get_thread().put_job(task)
+        return {
+            "status_code": 200,
+            "message": "Server received your request!"
+        }
 
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)

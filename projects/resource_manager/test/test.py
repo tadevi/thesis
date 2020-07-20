@@ -19,7 +19,7 @@ class Foo1(ThreadTask):
 
 
 def run():
-    pool = ThreadPool()
+    pool = ThreadPool.instance()
     thread_task_1 = Foo()
     thread_task_2 = Foo1()
 
@@ -28,5 +28,5 @@ def run():
     pool.get_thread().put_job(thread_task_2)
 
     sleep(3)
-    print(ThreadPool().thread_count)
+    print(ThreadPool.instance().thread_count)
     pool.clean()

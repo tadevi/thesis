@@ -17,8 +17,8 @@ class RuleEngine(metaclass=Singleton):
         for rule in rules:
             try:
                 if rule['data_type'] == 'scalar':
-                    ThreadPool().get_thread().put_job(HandleScalar(rule['modules'], input))
+                    ThreadPool.instance().get_thread().put_job(HandleScalar(rule['modules'], input))
                 elif rule['data_type'] == 'stream':
-                    ThreadPool().get_thread().put_job(HandleStream(rule['modules'], input))
+                    ThreadPool.instance().get_thread().put_job(HandleStream(rule['modules'], input))
             except:
                 log.e('RuleEngine', traceback.format_exc())

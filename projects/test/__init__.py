@@ -128,14 +128,12 @@ def test_gps_flow():
     t.daemon = True
     t.start()
 
-    network_module = Network({})
-
     is_post = True
 
     while True:
         if is_post:
             input("Press Enter to send POST\n")
-            network_module.post("http://localhost:3000/iot",
+            Network.instance().post("http://localhost:3000/iot",
                                 {
                                     "name": "gps",
                                     "data": {
@@ -147,7 +145,7 @@ def test_gps_flow():
                                 })
         else:
             input("Press Enter to send GET\n")
-            network_module.get("http://localhost:3000/video")
+            Network.instance().get("http://localhost:3000/video")
         is_post = not is_post
 
 
@@ -160,11 +158,9 @@ def test_cloud_http():
     t.daemon = True
     t.start()
 
-    network_module = Network({})
-
     while True:
         input("Press Enter to send GET\n")
-        network_module.get("http://localhost:4000/appearance",
+        Network.instance().get("http://localhost:4000/appearance",
                            {
                                "from": 1589197615040,
                                "to": 1589712007301
@@ -180,11 +176,9 @@ def test_post_camera_cloud():
     t.daemon = True
     t.start()
 
-    network_module = Network({})
-
     while True:
         input("Press Enter to send POST\n")
-        network_module.post("http://localhost:4000/camera",
+        Network.instance().post("http://localhost:4000/camera",
                             {
                                 "camera_id": "test",
                                 "name": "cameraTest",
@@ -219,10 +213,8 @@ def test_fog1_stream():
     t = threading.Thread(target=make_web)
     t.start()
 
-    network_module = Network({})
-
     input("ENTER to post stream meta to fog1\n")
-    network_module.post("http://localhost:3000/stream/",
+    Network.instance().post("http://localhost:3000/stream/",
                         {
                             "name": "traffic_camera",
                             "camera_id": "0",

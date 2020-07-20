@@ -1,0 +1,15 @@
+{
+    "database": {
+        "db_name": "iot-db",
+        "mongo_url": "mongodb://localhost:27017/"
+    },
+    "start_up": [
+        {
+            "camera_id": "0",
+            "demo": "true",
+            "name": "traffic_camera",
+            "type": "mjpeg",
+            "url": "https://www.youtube.com/watch?v=cQ54GDm1eL0"
+        }
+    ]
+}

@@ -3,22 +3,21 @@
 # This module should have def run(input, configs)
 # @input: received data from server
 # @configs: addition configs such as @database_name, @collection_name, @mongo_url
-import traceback
-from typing import Dict
 
 import requests
 
 from modules import log
+from resource_manager.Singleton import Singleton
 from resource_manager.ThreadPool import ThreadPool
 from resource_manager.ThreadTask import ThreadTask
 
 tag = "Network"
 
 
-class Network:
-    # configs should at least have "collection_name"
-    def __init__(self, configs: Dict):
-        self.configs = configs
+class Network(metaclass=Singleton):
+    @staticmethod
+    def instance():
+        return Network()
 
     def response_with(self, status, message, data=''):
         return {
@@ -27,8 +26,8 @@ class Network:
             "data": data
         }
 
-    def post(self, url, json):
-        ThreadPool().get_thread().put_job(ThreadTask(self.__post, (url, json)))
+    def post(self, url, json=None):
+        ThreadPool.instance().get_thread().put_job(ThreadTask(self.__post, (url, json)))
 
     def __post(self, url, json):
         try:
@@ -38,7 +37,8 @@ class Network:
 
             return self.response_with(response.status_code, response.reason)
         except:
-            log.e("Network", traceback.format_exc())
+            # log.e("Network", traceback.format_exc())
+            log.e("POST fail\nurl:", url, "\njson:", json)
             return self.response_with(-1, "Something went wrong")
 
     def get(self, url, params=None) -> dict:
@@ -51,7 +51,8 @@ class Network:
 
             return self.response_with(response.status_code, response.reason, json)
         except:
-            log.e("Network", traceback.format_exc())
+            log.e("GET fail\nurl:", url, "\nparams:", params)
+            # log.e("Network", traceback.format_exc())
             return self.response_with(-1, "Something went wrong")
 
     def download_file(self, save_path, url, params=None):

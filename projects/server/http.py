@@ -107,9 +107,18 @@ fog node query
 
 
 @app.route('/fog_meta')
-def fog_data():
+def fog_meta():
     node_meta = GlobalConfigs.instance().get_config('meta')
     return node_meta
+
+
+@app.route('/request_update', methods=['POST'])
+def request_update():
+    GlobalConfigs.instance().check_for_update()
+    return {
+        "status_code": 200,
+        "message": "Server received your request!"
+    }
 
 
 def make_web():

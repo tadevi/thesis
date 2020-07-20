@@ -1,7 +1,8 @@
 from queue import Queue
 
+from modules import log
 from modules.base import Map
-from modules import network, log
+from modules.network import Network
 from resource_manager.GlobalConfigs import GlobalConfigs
 from server.channel import add_to_channel_analysis, add_to_channel_stream
 
@@ -14,7 +15,6 @@ class Main(Map):
             add_to_channel_stream(self.configs['camera_id'], self.queue)
 
     def push_to_cloud(self):
-        network_module = network.Network({})
         d = {}
 
         node_url = GlobalConfigs.instance().get_node_ip()
@@ -25,7 +25,7 @@ class Main(Map):
             d['camera_id'] = self.configs['camera_id']
             d['url'] = 'http://' + node_url + ":" + str(port) + "/video?stream_id=" + camera_id
 
-            network_module.post(self.configs['cloud_url'] + '/camera/', {
+            Network.instance().post(self.configs['cloud_url'] + '/camera/', {
                 **d,
                 "name": self.configs['name'],
             })
@@ -37,7 +37,7 @@ class Main(Map):
             if remote_url is None:
                 remote_url = self.configs['fog2_url']
 
-            network_module.post(remote_url + '/stream/', {
+            Network.instance().post(remote_url + '/stream/', {
                 **d,
                 "name": self.configs['name'],
             })

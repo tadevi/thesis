@@ -6,6 +6,10 @@ from resource_manager.ThreadInstance import ThreadInstance
 
 
 class ThreadPool(metaclass=Singleton):
+    @staticmethod
+    def instance():
+        return ThreadPool()
+
     def __init__(self):
         self.threads = []
         self.thread_count = 0

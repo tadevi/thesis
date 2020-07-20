@@ -1,34 +1,11 @@
 import json
-import os
-import time
-import zipfile
 
-from resource_manager.GlobalConfigs import GlobalConfigs
-
-
-def gen_update(project_root=GlobalConfigs.instance().project_root):
-    zip_modules(project_root)
-
-    with open("node_meta3.json", 'r') as f:
-        meta = json.load(f)
-        meta["last_update_time"] = int(round(time.time() * 1000))
-
-    with open('node_meta3.json', 'w') as f:
-        json.dump(meta, f, indent=4)
-
-    print("zipping modules done")
-
-
-def zip_modules(project_root):
-    modules_path = os.path.join(project_root, "modules")
-
-    zipf = zipfile.ZipFile('modules.zip', 'w', zipfile.ZIP_DEFLATED)
-    for root, dirs, files in os.walk(modules_path):
-        for file in files:
-            zipf.write(os.path.join(os.path.relpath(root, GlobalConfigs.instance().project_root), file))
-    zipf.close()
-
+import requests
 
 if __name__ == "__main__":
-    project_root = os.path.dirname(os.path.abspath(__file__))
-    gen_update(project_root)
+    with open("node_meta.json", 'r') as f:
+        meta = json.load(f)
+
+    cloud_gen_update_url = meta['cloud_url'] + "/gen_update"
+    requests.post(cloud_gen_update_url, json={})
+    print("POSTED to", cloud_gen_update_url)
