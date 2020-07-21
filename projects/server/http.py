@@ -1,9 +1,14 @@
+import time
+
 from cv2 import cv2
 from flask import *
 
+from modules import log, utils
 from resource_manager.GlobalConfigs import GlobalConfigs
 from rule_engine import RuleEngine
 from server.channel import get_channel
+
+tag = "Http"
 
 
 def start_up():
@@ -80,6 +85,7 @@ def gen(channel, channel_id):
                    b'Content-Type:image/jpeg\r\n'
                    b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
                                                                     b'\r\n' + frame.tostring() + b'\r\n')
+            # time.sleep(GlobalConfigs.instance().FPS)
     else:
         yield b'--\r\n'
 

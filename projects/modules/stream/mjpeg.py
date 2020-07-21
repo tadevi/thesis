@@ -7,6 +7,9 @@ from resource_manager.GlobalConfigs import GlobalConfigs
 from server.channel import add_to_channel_analysis, add_to_channel_stream
 
 
+tag = "mjpeg"
+
+
 class Main(Map):
     def broadcast_stream(self):
         if self.configs.get('type') == "analysis":
@@ -46,7 +49,7 @@ class Main(Map):
 
     def __init__(self, configs):
         self.configs = configs
-        self.queue = Queue(maxsize=1)
+        self.queue = Queue(maxsize=3)
         self.broadcast_stream()
         self.push = False
 
@@ -56,8 +59,12 @@ class Main(Map):
             self.push_to_cloud()
             self.push = True
 
-        if self.queue.full():
-            self.queue.get()
-        self.queue.put(inputs)
+        # if self.queue.full():
+        #     self.queue.get()
+        try:
+            self.queue.put(inputs, block=False)
+            # log.v(tag, "put frame", count)
+        except:
+            pass
 
         return inputs

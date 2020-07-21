@@ -38,7 +38,7 @@ class Network(metaclass=Singleton):
             return self.response_with(response.status_code, response.reason)
         except:
             # log.e("Network", traceback.format_exc())
-            log.e("POST fail\nurl:", url, "\njson:", json)
+            log.e("POST fail to url:", url, "with data:", json)
             return self.response_with(-1, "Something went wrong")
 
     def get(self, url, params=None) -> dict:
@@ -51,7 +51,7 @@ class Network(metaclass=Singleton):
 
             return self.response_with(response.status_code, response.reason, json)
         except:
-            log.e("GET fail\nurl:", url, "\nparams:", params)
+            log.e("GET fail from url:", url, "with params:", params)
             # log.e("Network", traceback.format_exc())
             return self.response_with(-1, "Something went wrong")
 

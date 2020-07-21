@@ -8,7 +8,7 @@ from resource_manager.ThreadTask import ThreadTask, ThreadTaskTerminate
 class ThreadInstance:
     def __init__(self):
         self.queue = Queue()
-        self._available = False
+        self._available = True
 
     def put_job(self, job):
         if isinstance(job, ThreadTask):
@@ -23,17 +23,17 @@ class ThreadInstance:
         self.queue.put(ThreadTaskTerminate())
 
     def run(self):
-        self._available = self.queue.empty()
         while True:
             try:
-                job = self.queue.get()
                 self._available = False
+                job = self.queue.get()
                 if isinstance(job, ThreadTaskTerminate):
                     break
                 log.i("ThreadInstance " + str(id(self)), "Starting a job " + str(id(job)))
                 job.run()
                 log.i("ThreadInstance " + str(id(self)), "Finish a job " + str(id(job)))
-                if self.queue.empty():
-                    self._available = True
+                # if self.queue.empty():
+                #     self._available = True
             except:
                 log.e("ThreadInstance " + str(id(self)), traceback.format_exc())
+            self._available = self.queue.empty()

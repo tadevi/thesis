@@ -24,6 +24,8 @@ class GlobalConfigs(metaclass=Singleton):
         self.port = 3000
         self.node_meta_name = "node_meta.json"
         self.project_root = None
+        # for stream
+        self.FPS = 1 / 24
 
     def init_node(self):
         with open(self.node_meta_name, 'r') as f:
