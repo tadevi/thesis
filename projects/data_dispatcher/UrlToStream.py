@@ -5,7 +5,6 @@ import youtube_dl
 from cv2 import cv2
 
 from modules import log
-from resource_manager.GlobalConfigs import GlobalConfigs
 
 TOTAL_DATA = 0
 LAST_TOTAL_PRINTED = 0
@@ -43,11 +42,11 @@ class UrlToStream:
 
     def init_cam(self):
         url = self.configs['url']
-        if self.configs.get('demo'):
+        if self.configs.get('demo') == 'true':
             self.cam = pafy_to_stream(url)
         else:
             self.cam = cv2.VideoCapture(url)
-            self.cam.set(cv2.CAP_PROP_BUFFERSIZE, 0)
+            self.cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 
     def get(self):
         global TOTAL_DATA
@@ -65,7 +64,7 @@ class UrlToStream:
                     print("Handled total", "{:.2f}".format(LAST_TOTAL_PRINTED), "(MB) data")
 
                 self.init_cam()
-                return self.get()
+                return None
 
             return frame
         except:

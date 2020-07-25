@@ -6,11 +6,11 @@ from bson import ObjectId
 from cv2 import cv2
 from flask import Flask, render_template, request, Response, send_from_directory
 
-from modules import utils, storage, log
+from data_dispatcher import DataDispatcher
+from modules import utils, storage
 from resource_manager.GlobalConfigs import GlobalConfigs
 from resource_manager.ThreadPool import ThreadPool
 from resource_manager.ThreadTask import ThreadTask
-from rule_engine import RuleEngine
 from server.channel import get_channel
 
 tag = 'CLOUD HTTP'
@@ -103,11 +103,11 @@ def make_web():
 
     @app.route('/stream/', methods=['POST'])
     def stream():
-        input = request.json
-        rules = GlobalConfigs.instance().lookup_rules(input['name'])
-        RuleEngine.instance().run(rules, input)
+        data = request.json
+        DataDispatcher.instance().dispatch(data)
         return {
-            "status": "success"
+            "status_code": 200,
+            "message": "Server received your request!"
         }
 
     def gen(channel, channel_id):

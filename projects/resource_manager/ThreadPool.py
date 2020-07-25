@@ -26,7 +26,7 @@ class ThreadPool(metaclass=Singleton):
     def create_thread(self):
         thread_instance = ThreadInstance()
         self.threads.append(thread_instance)
-        new_thread = Thread(target=thread_instance.run)
+        new_thread = Thread(target=thread_instance.run, daemon=True)
         new_thread.start()
         log.v("ThreadPool", "Spawn a new thread!!!!")
         self.thread_count += 1

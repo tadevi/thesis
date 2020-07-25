@@ -1,21 +1,17 @@
-import time
-
 from cv2 import cv2
 from flask import *
 
-from modules import log, utils
+from data_dispatcher import DataDispatcher
 from resource_manager.GlobalConfigs import GlobalConfigs
-from rule_engine import RuleEngine
 from server.channel import get_channel
 
 tag = "Http"
 
 
 def start_up():
-    start_up_inputs = GlobalConfigs.instance().get_config('start_up')
-    for input in start_up_inputs:
-        rules = GlobalConfigs.instance().lookup_rules(input['name'])
-        RuleEngine.instance().run(rules, input)
+    start_ups = GlobalConfigs.instance().get_config('start_up')
+    for data in start_ups:
+        DataDispatcher.instance().dispatch(data)
 
 
 app = Flask(__name__)
@@ -26,49 +22,11 @@ def index():
     return "..."
 
 
-'''
-Receive stream from camera or lower layer fog node to process
-json body request have format:
-{
-    "name": <rule name>,
-    "camera_id":<camera id>,
-    "type": "mjpeg" vs other
-    "url" : <optional>, 
-    ... additional fields
-}
-'''
-
-
+@app.route('/iot/', methods=['POST'])
 @app.route('/stream/', methods=['POST'])
 def stream():
-    input = request.json
-    rules = GlobalConfigs.instance().lookup_rules(input['name'])
-    RuleEngine.instance().run(rules, input)
-    return {
-        "status": "success"
-    }
-
-
-'''
-json body request have format:
-{
-    "name": <rule name>,
-    "data":{
-        //body data for iot sensor
-    }
-}
-'''
-
-
-@app.route('/iot/', methods=['POST'])
-def iot_data():
-    json = request.json
-    rule_name = json['name']
-    input = json['data']
-
-    rules = GlobalConfigs.instance().lookup_rules(rule_name)
-
-    RuleEngine.instance().run(rules, input)
+    data = request.json
+    DataDispatcher.instance().dispatch(data)
     return {
         "status_code": 200,
         "message": "Server received your request!"

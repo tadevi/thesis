@@ -2,10 +2,9 @@
   "start_up": [
     {
       "name": "traffic_camera",
-      "url": "https://www.youtube.com/watch?v=cQ54GDm1eL0",
-      "type": "mjpeg",
+      "url": 0,
       "camera_id": "0",
-      "demo": "true"
+      "demo": "false"
     }
   ],
   "database": {
