@@ -1,3 +1,7 @@
+from time import sleep
+
+import cv2
+
 from data_dispatcher.UrlToStream import UrlToStream
 from data_dispatcher.subscribers import Subscriber
 from modules import log
@@ -52,6 +56,7 @@ class StreamChannel(BaseChannel):
         while True:
             item = url_to_stream.get()
             self.on_next(item)
+            sleep(1/url_to_stream.fps)
 
 
 class ScalaChannel(BaseChannel):

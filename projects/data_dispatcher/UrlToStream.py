@@ -47,6 +47,8 @@ class UrlToStream:
         else:
             self.cam = cv2.VideoCapture(url)
             self.cam.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.fps = self.cam.get(cv2.CAP_PROP_FPS)
+        log.v("url to stream", "fps:", self.fps)
 
     def get(self):
         global TOTAL_DATA
