@@ -1,0 +1,19 @@
+{
+    "data_type": "scalar",
+    "modules": [
+        {
+            "name": "validate",
+            "package": "modules.text.gps"
+        },
+        {
+            "configs": {
+                "col_name": "gps",
+                "db_name": "iot-db",
+                "mongo_url": "mongodb://localhost:27017/"
+            },
+            "name": "storage",
+            "package": "modules.utils"
+        }
+    ],
+    "name": "gps"
+}

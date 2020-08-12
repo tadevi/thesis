@@ -22,7 +22,8 @@ def run():
     # test_post_camera_cloud()
     # test_camera_flow()
     # test_post_fake_data()
-    test_fog1_stream()
+    # test_fog1_stream()
+    test_traffic_violation()
 
 
 def test_validate_and_storage():
@@ -220,3 +221,26 @@ def test_fog1_stream():
                             "camera_id": "0",
                             "url": 0
                         })
+
+
+# def test_traffic_violation():
+#     from modules.image.violation_detection.TrafficProcessor import TrafficProcessor
+#     tp = TrafficProcessor()
+#
+#     cap = cv2.VideoCapture('video7.mp4')
+#     while True:
+#         _, frame = cap.read()
+#         if frame is None:
+#             cap = cv2.VideoCapture('video7.mp4')
+#             continue
+#         res = tp.cross_violation(frame)
+#         print("reference:", res.get('reference'))
+#         print("list_of_cars:", res.get('list_of_cars'))
+#         print("cnt:", res.get('cnt'), '\n')
+#         frame = res.get('frame')
+#         cv2.imshow('Traffic Violation', frame)
+#         cv2.waitKey(int(1/cap.get(cv2.CAP_PROP_FPS)*1000))
+
+
+# if __name__ == '__main__':
+#     run()

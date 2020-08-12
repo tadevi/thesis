@@ -1,5 +1,6 @@
 import time
 import socket
+import requests
 
 
 def current_milli_time():
@@ -13,6 +14,7 @@ def json_encode(document: dict):
 
 
 def get_ip():
+    # return requests.get('https://api.ipify.org').text
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]

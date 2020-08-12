@@ -4,15 +4,17 @@
   "modules": [
     {
       "package": "modules.image",
-      "name": "human_detection",
-      "configs": {}
+      "name": "violation_detection",
+      "configs": {
+        "cloud_url": "http://cloud_ip:3000"
+      }
     },
     {
       "package": "modules.stream",
       "name": "mjpeg",
       "configs": {
-        "cloud_url": "http://cloud_ip:3000",
-        "type": "stream"
+        "type": "stream",
+        "cloud_url": "http://fog2_ip:3000"
       }
     },
     {

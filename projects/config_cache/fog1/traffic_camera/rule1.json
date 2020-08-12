@@ -1,0 +1,29 @@
+{
+    "data_type": "stream",
+    "modules": [
+        {
+            "configs": {
+                "cloud_url": "http://localhost:5000"
+            },
+            "name": "violation_detection",
+            "package": "modules.image"
+        },
+        {
+            "configs": {
+                "cloud_url": "http://localhost:5000",
+                "type": "stream"
+            },
+            "name": "mjpeg",
+            "package": "modules.stream"
+        },
+        {
+            "configs": {
+                "fog2_url": "http://localhost:4000",
+                "type": "analysis"
+            },
+            "name": "mjpeg",
+            "package": "modules.stream"
+        }
+    ],
+    "name": "traffic_camera"
+}

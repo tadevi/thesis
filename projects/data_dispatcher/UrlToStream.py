@@ -25,12 +25,12 @@ def youtube_to_stream(url):
 
 def pafy_to_stream(url):
     video = pafy.new(url)
-    cam = None
-    for stream in video.streams:
-        if stream.resolution == '640x360':
-            url = stream.url
-            cam = cv2.VideoCapture(url)
-    return cam
+    url = video.getbest().url
+    # for stream in video.streams:
+    #     if stream.resolution == '640x360':
+    #         url = stream.url
+    #         break
+    return cv2.VideoCapture(url)
 
 
 class UrlToStream:
