@@ -11,6 +11,8 @@ tag = "Http"
 def start_up():
     start_ups = GlobalConfigs.instance().get_config('start_up')
     for data in start_ups:
+        if data.get('camera_id') is not None and GlobalConfigs.instance().layer == 1:
+            data['camera_id'] = str(GlobalConfigs.instance().position)
         DataDispatcher.instance().dispatch(data)
 
 
@@ -36,14 +38,19 @@ def stream():
 def gen(channel, channel_id):
     queue = channel.get(channel_id)
     if queue is not None:
+        last_frame = None
         while True:
             frame = queue.get()
-            _, frame = cv2.imencode('.JPEG', frame)
+            if frame is None:
+                frame = last_frame
+            else:
+                _, frame = cv2.imencode('.JPEG', frame)
+                last_frame = frame
+
             yield (b'--frame\r\n'
                    b'Content-Type:image/jpeg\r\n'
                    b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
                                                                     b'\r\n' + frame.tostring() + b'\r\n')
-            # time.sleep(GlobalConfigs.instance().FPS)
     else:
         yield b'--\r\n'
 

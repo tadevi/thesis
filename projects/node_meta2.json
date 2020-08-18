@@ -3,7 +3,6 @@
     "id": "2.1",
     "storage": 5000,
     "port": 4000,
-    "cloud_url": "http://localhost:5000",
     "is_cloud": false,
-    "last_update_time": 159585700814
+    "last_update_time": 15977366507
 }

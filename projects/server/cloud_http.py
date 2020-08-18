@@ -113,9 +113,15 @@ def make_web():
     def gen(channel, channel_id):
         queue = channel.get(channel_id)
         if queue is not None:
+            last_frame = None
             while True:
                 frame = queue.get()
-                _, frame = cv2.imencode('.JPEG', frame)
+                if frame is None:
+                    frame = last_frame
+                else:
+                    _, frame = cv2.imencode('.JPEG', frame)
+                    last_frame = frame
+
                 yield (b'--frame\r\n'
                        b'Content-Type:image/jpeg\r\n'
                        b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
@@ -188,6 +194,24 @@ def make_web():
 
         else:
             return {}
+
+    @app.route('/node_id', methods=['GET'])
+    def get_node_id():
+        ip = request.args.get('ip')
+        port = request.args.get('port')
+
+        if None not in [ip, port]:
+            nodes_ip = GlobalConfigs.instance().nodes_ip.get("layers")
+            for layer, layer_ips in nodes_ip.items():
+                if layer != "cloud":
+                    for idx, ip_port in enumerate(layer_ips):
+                        if (ip == ip_port.get('ip') or GlobalConfigs.instance().test_on_local) and port == ip_port.get(
+                                'port'):
+                            id = str(layer) + '.' + str(idx + 1)
+                            return {
+                                'id': id
+                            }
+        return {}
 
     @app.route('/last_update', methods=['GET'])
     def get_last_update():

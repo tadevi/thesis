@@ -73,3 +73,5 @@ fabric.properties
 .env
 __pycache__
 *.pyc
+/.idea/
+/venv/

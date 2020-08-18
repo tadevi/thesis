@@ -2,34 +2,30 @@
   "layers": {
     "1": [
       {
-        "ip": "localhost",
+        "ip": "35.187.235.67",
         "port": "3000"
       },
       {
-        "ip": "localhost",
-        "port": "3001"
+        "ip": "35.198.203.79",
+        "port": "3000"
       },
       {
-        "ip": "localhost",
-        "port": "3002"
-      },
-      {
-        "ip": "localhost",
-        "port": "3003"
+        "ip": "34.101.235.41",
+        "port": "3000"
       }
     ],
     "2": [
       {
-        "ip": "localhost",
+        "ip": "35.186.153.114",
         "port": "4000"
       },
       {
-        "ip": "localhost",
-        "port": "4001"
+        "ip": "34.101.174.80",
+        "port": "4000"
       }
     ],
     "cloud": {
-        "ip": "localhost",
+        "ip": "34.101.208.56",
         "port": "5000"
       }
   }

@@ -20,31 +20,35 @@ class GlobalConfigs(metaclass=Singleton):
     def __init__(self):
         self.tag = "GlobalConfigs"
         self.config = None
-        self.ip = 'localhost'
+        self.internal_ip = 'localhost'
+        self.external_ip = '0.0.0.0'
         self.port = 3000
         self.node_meta_name = "node_meta.json"
         self.project_root = None
         # for stream
         self.FPS = 1 / 24
+        self.test_on_local = True
 
     def init_node(self):
+        with open("common_meta.json", 'r') as f:
+            common_meta = json.load(f)
+            self.test_on_local = common_meta.get('test_on_local') == "true"
+            self.cloud_url = common_meta.get("cloud_url")
+
         with open(self.node_meta_name, 'r') as f:
-            meta = json.load(f)
+            node_meta = json.load(f)
 
-        id = meta.get("id")
-        self.layer, self.position = id.split('.')
-        self.layer = int(self.layer)
-        self.position = int(self.position)
-        self.name = meta.get("name")
-        self.storage = meta.get("storage")
-        self.port = meta.get("port")
-        self.cloud_url = meta.get("cloud_url")
-        self.is_cloud = meta.get("is_cloud")
-        self.last_update_time = meta.get("last_update_time")
+        self.name = node_meta.get("name")
+        self.storage = node_meta.get("storage")
+        self.port = node_meta.get("port")
+        self.is_cloud = node_meta.get("is_cloud")
+        self.last_update_time = node_meta.get("last_update_time")
 
-        self.ip = utils.get_ip()
+        self.internal_ip = utils.get_internal_ip()
+        log.v(self.tag, "Resolved internal IP Address:", self.internal_ip)
 
-        log.v(self.tag, "Resolved IP Address:", self.ip)
+        self.external_ip = utils.get_external_ip()
+        log.v(self.tag, "Resolved external IP Address:", self.external_ip)
 
         if self.is_cloud:
             with open("nodes_ip.json", 'r') as f:
@@ -52,6 +56,22 @@ class GlobalConfigs(metaclass=Singleton):
 
             self.config = self.parse_config("cloud")
         else:
+            # get layer & position from cloud
+            res = Network.instance().get(self.cloud_url + "/node_id", {
+                "ip": self.external_ip,
+                "port": self.port
+            })
+            if res.get('status_code') == 200:
+                id = res.get('data').get("id")
+                log.v(tag, "Obtained id from cloud:", id)
+            else:
+                id = node_meta.get("id")
+                log.v(tag, "Obtained id from local:", id)
+
+            self.layer, self.position = id.split('.')
+            self.layer = int(self.layer)
+            self.position = int(self.position)
+
             self.check_for_update()
 
     def check_for_update(self):
@@ -68,7 +88,7 @@ class GlobalConfigs(metaclass=Singleton):
             res = Network.instance().get(self.cloud_url + "/config", {
                 "layer": self.layer,
                 "position": self.position,
-                "ip": self.ip,
+                "ip": self.external_ip,
                 "port": self.port
             })
             self.config = res.get("data")
@@ -118,8 +138,8 @@ class GlobalConfigs(metaclass=Singleton):
 
         rules_name = list(rules.keys())
         for rule_name in rules_name:
-            Path(config_cache_folder+"/"+rule_name).mkdir(parents=True, exist_ok=True)
-            rule_files_name = ["rule"+str(i)+".json" for i in range(1, len(rules[rule_name])+1)]
+            Path(config_cache_folder + "/" + rule_name).mkdir(parents=True, exist_ok=True)
+            rule_files_name = ["rule" + str(i) + ".json" for i in range(1, len(rules[rule_name]) + 1)]
             for idx, rule_file_name in enumerate(rule_files_name):
                 with open(config_cache_folder_relative_path + "/" + rule_name + "/" + rule_file_name, 'w') as f:
                     json.dump(rules[rule_name][idx], f, indent=4)
@@ -129,7 +149,7 @@ class GlobalConfigs(metaclass=Singleton):
         return self.port
 
     def get_node_ip(self):
-        return self.ip
+        return self.internal_ip if self.test_on_local else self.external_ip
 
     def assert_config(self):
         if self.config is None:
@@ -180,7 +200,9 @@ class GlobalConfigs(metaclass=Singleton):
             }
         }
     """
-    def parse_config(self, config_name, cloud_ip=None, cloud_port=None, fog2_ip=None, fog2_port=None, folder_name="config"):
+
+    def parse_config(self, config_name, cloud_ip=None, cloud_port=None, fog2_ip=None, fog2_port=None,
+                     folder_name="config"):
         cloud_url = utils.get_base_url(cloud_ip, cloud_port)
         fog2_url = utils.get_base_url(fog2_ip, fog2_port)
 
