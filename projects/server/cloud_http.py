@@ -4,7 +4,11 @@ from pathlib import Path
 
 from bson import ObjectId
 from cv2 import cv2
-from flask import Flask, render_template, request, Response, send_from_directory
+from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for
+from flask_login import login_user, logout_user, current_user, login_required, UserMixin, LoginManager
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField
+from wtforms.validators import DataRequired
 
 from data_dispatcher import DataDispatcher
 from modules import utils, storage
@@ -32,11 +36,33 @@ def get_database():
 
 def make_web():
     app = Flask(__name__, template_folder='.')
+    SECRET_KEY = os.urandom(32)
+    app.config['SECRET_KEY'] = SECRET_KEY
     database = get_database()
+    lm = LoginManager()  # flask-loginmanager
+    lm.init_app(app)  # init the login manager
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+    # provide login manager with load_user callback
+    @lm.user_loader
+    def load_user(user_id):
+        return User('mgt', '12345678')
+
+    # App main route + generic routing
+    @app.route('/', defaults={'path': 'index.html'})
+    @app.route('/<path>')
+    def index(path):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login'))
+
+        try:
+
+            # try to match the pages defined in -> pages/<input file>
+            return render_template('templates/layouts/default.html',
+                                   content=render_template('templates/pages/' + path))
+        except:
+
+            return render_template('templates/layouts/auth-default.html',
+                                   content=render_template('templates/pages/index.html'))
 
     '''
     ai services
@@ -239,4 +265,50 @@ def make_web():
             "message": "Server received your request!"
         }
 
+    # Authenticate user
+    @app.route('/login.html', methods=['GET', 'POST'])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for('index'))
+
+        # Declare the login form
+        form = LoginForm(request.form)
+
+        # Flask message injected into the page, in case of any errors
+        msg = None
+
+        # check if both http method is POST and form is valid on submit
+        if form.validate_on_submit():
+
+            # assign form data to variables
+            username = request.form.get('username', '', type=str)
+            password = request.form.get('password', '', type=str)
+
+            if username == 'mgt':
+                user = User(username, password)
+                login_user(user)
+                return redirect(url_for('index'))
+            else:
+                msg = "Unkkown user"
+
+        return render_template('templates/layouts/default.html',
+                               content=render_template('templates/pages/login.html', form=form, msg=msg))
+
+    @app.route('/logout.html', methods=['GET', 'POST'])
+    def logout():
+        logout_user()
+        return redirect(url_for('login'))
+
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)
+
+
+class User(UserMixin):
+    def __init__(self, username, password):
+        self.id = username
+        self.username = username
+        self.password = password
+
+
+class LoginForm(FlaskForm):
+    username = StringField(u'Username', validators=[DataRequired()])
+    password = PasswordField(u'Password')

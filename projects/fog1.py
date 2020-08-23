@@ -12,6 +12,6 @@ if global_configs.is_cloud:
 
     make_web()
 else:
-    from server.http import make_web
+    from server.fog_http import make_web
 
     make_web()
