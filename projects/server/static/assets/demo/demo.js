@@ -579,4 +579,15 @@ demo = {
     // To add the marker to the map, call setMap();
     marker.setMap(map);
   }
+
+  loadAllCamera:function() {
+      $.ajax({
+          type: "GET",
+          url: "/camera",
+          success: function(data){
+            console.log( data);
+          },
+          dataType: 'application/json'
+        });
+    });
 };

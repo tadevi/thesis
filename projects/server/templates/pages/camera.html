@@ -1,0 +1,33 @@
+<div class="panel-header panel-header-sm">
+</div>
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="title">Camera Surveillance System</h5>
+                </div>
+
+                <div class="card-header">
+                    <label for="cars">Choose a camera:</label>
+
+                    <select name="cars" id="cars" onchange="
+                       //document.getElementById('cameraView').src = '/video?stream_id=' + options[this.selectedIndex].value;
+                       document.getElementById('cameraView').src = '/test_video?stream_id=' + options[this.selectedIndex].value;
+                       console.log('change src to'+document.getElementById('cameraView').src);
+                ">
+                        <option value="1">Cam1</option>
+                        <option value="2">Cam2</option>
+                        <option value="3">Cam3</option>
+                        <option value="4">Cam4</option>
+                    </select>
+                </div>
+
+                <div class="card-header" style="margin-bottom:30px">
+                    <img id="cameraView" style="-webkit-user-select: none;margin: auto;" src="/test_video">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

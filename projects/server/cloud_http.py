@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from time import sleep
 
 from bson import ObjectId
 from cv2 import cv2
@@ -11,6 +12,7 @@ from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired
 
 from data_dispatcher import DataDispatcher
+from data_dispatcher.UrlToStream import pafy_to_stream
 from modules import utils, storage
 from resource_manager.GlobalConfigs import GlobalConfigs
 from resource_manager.ThreadPool import ThreadPool
@@ -298,6 +300,31 @@ def make_web():
     def logout():
         logout_user()
         return redirect(url_for('login'))
+
+    @app.route('/test_video')
+    def test_video():
+
+        return Response(test_gen(request.args.get('stream_id')), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    def test_gen(stream_id):
+        if stream_id is not None and stream_id != '1':
+            url = 'https://www.youtube.com/watch?v=Q0avX5iA4As'
+        else:
+            url = 'https://www.youtube.com/watch?v=YJerlcRThB8'
+        cam = pafy_to_stream(url)
+        fps = cam.get(cv2.CAP_PROP_FPS)
+        _, frame = cam.read()
+        while frame is not None:
+            _, frame = cv2.imencode('.JPEG', frame)
+
+            yield (b'--frame\r\n'
+                   b'Content-Type:image/jpeg\r\n'
+                   b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
+                                                                    b'\r\n' + frame.tostring() + b'\r\n')
+
+            sleep(1/fps)
+            _, frame = cam.read()
+        yield b'--\r\n'
 
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)
 
