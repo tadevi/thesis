@@ -1,16 +1,18 @@
 import json
 import os
 from pathlib import Path
+from time import sleep
 
 from bson import ObjectId
 from cv2 import cv2
-from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for
+from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for, make_response
 from flask_login import login_user, logout_user, current_user, login_required, UserMixin, LoginManager
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired
 
 from data_dispatcher import DataDispatcher
+from data_dispatcher.UrlToStream import pafy_to_stream
 from modules import utils, storage
 from resource_manager.GlobalConfigs import GlobalConfigs
 from resource_manager.ThreadPool import ThreadPool
@@ -36,6 +38,7 @@ def get_database():
 
 def make_web():
     app = Flask(__name__, template_folder='.')
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
     SECRET_KEY = os.urandom(32)
     app.config['SECRET_KEY'] = SECRET_KEY
     database = get_database()
@@ -52,7 +55,11 @@ def make_web():
     @app.route('/<path>')
     def index(path):
         if not current_user.is_authenticated:
-            return redirect(url_for('login'))
+            # test
+            user = User("mgt", "12345678")
+            login_user(user)
+
+            # return redirect(url_for('login'))
 
         try:
 
@@ -61,7 +68,7 @@ def make_web():
                                    content=render_template('templates/pages/' + path))
         except:
 
-            return render_template('templates/layouts/auth-default.html',
+            return render_template('templates/layouts/default.html',
                                    content=render_template('templates/pages/index.html'))
 
     '''
@@ -114,19 +121,6 @@ def make_web():
     camera services
     '''
 
-    @app.route('/camera', methods=['GET'])
-    def get_camera():
-        camera_id = request.args.get('id')
-
-        if camera_id is not None:
-            data = database.find_one('camera', {'camera_id': str(camera_id)})
-            data = utils.json_encode(data) if data is not None else {}
-        else:
-            cursor = database.find_many('camera', {})
-            data = [utils.json_encode(document) for document in cursor]
-
-        return {"data": data}
-
     @app.route('/stream/', methods=['POST'])
     def stream():
         data = request.json
@@ -164,13 +158,25 @@ def make_web():
             return Response(gen(get_channel('stream'), request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    @app.route('/camera/', methods=['POST'])
-    def add_camera():
-        json = request.json
-        database.insert_one('camera', json)
-        return {
-            "status": "success"
-        }
+    @app.route('/camera/', methods=['POST', 'GET'])
+    def camera():
+        if request.method == 'POST':
+            json = request.json
+            database.upsert_one('camera', json, {'camera_id': json.get('camera_id')})
+            return {
+                "status": "success"
+            }
+        elif request.method == 'GET':
+            camera_id = request.args.get('id')
+
+            if camera_id is not None:
+                data = database.find_one('camera', {'camera_id': str(camera_id)})
+                data = utils.json_encode(data) if data is not None else {}
+            else:
+                cursor = database.find_many('camera', {})
+                data = [utils.json_encode(document) for document in cursor]
+
+            return {"data": data}
 
     '''
     iot services
@@ -298,6 +304,31 @@ def make_web():
     def logout():
         logout_user()
         return redirect(url_for('login'))
+
+    @app.route('/test_video')
+    def test_video():
+
+        return Response(test_gen(request.args.get('stream_id')), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    def test_gen(stream_id):
+        if stream_id is not None and stream_id != '1':
+            url = 'https://www.youtube.com/watch?v=Q0avX5iA4As'
+        else:
+            url = 'https://www.youtube.com/watch?v=YJerlcRThB8'
+        cam = pafy_to_stream(url)
+        fps = cam.get(cv2.CAP_PROP_FPS)
+        _, frame = cam.read()
+        while frame is not None:
+            _, frame = cv2.imencode('.JPEG', frame)
+
+            yield (b'--frame\r\n'
+                   b'Content-Type:image/jpeg\r\n'
+                   b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
+                                                                    b'\r\n' + frame.tostring() + b'\r\n')
+
+            sleep(1 / fps)
+            _, frame = cam.read()
+        yield b'--\r\n'
 
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)
 

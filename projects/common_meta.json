@@ -1,4 +1,4 @@
 {
-    "test_on_local": "false",
-    "cloud_url": "http://34.101.208.56:5000"
+    "test_on_local": "true",
+    "cloud_url": "http://localhost:5000"
 }
