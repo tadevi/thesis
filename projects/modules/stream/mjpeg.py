@@ -20,13 +20,13 @@ class Main(Map):
     def push_to_cloud(self):
         d = {}
 
-        node_url = GlobalConfigs.instance().get_node_ip()
-        port = GlobalConfigs.instance().get_port()
+        node_ip = str(GlobalConfigs.instance().get_node_ip())
+        port = str(GlobalConfigs.instance().get_port())
         camera_id = self.configs['camera_id']
         if self.configs.get('type') == "stream":
             add_to_channel_stream(self.configs['camera_id'], self.queue)
             d['camera_id'] = self.configs['camera_id']
-            d['url'] = 'http://' + node_url + ":" + str(port) + "/video?stream_id=" + camera_id
+            d['url'] = 'http://' + node_ip + ":" + port + "/video?stream_id=" + camera_id
 
             Network.instance().post(self.configs['cloud_url'] + '/camera/', {
                 **d,
@@ -34,7 +34,7 @@ class Main(Map):
             })
         else:
             d['camera_id'] = self.configs['camera_id']
-            d['url'] = 'http://' + node_url + ":" + str(port) + "/video?analysis_id=" + camera_id
+            d['url'] = 'http://' + node_ip + ":" + port + "/video?analysis_id=" + camera_id
 
             remote_url = self.configs.get('cloud_url')
             if remote_url is None:

@@ -13,7 +13,7 @@ class ThreadPool(metaclass=Singleton):
     def __init__(self):
         self.threads = []
         self.thread_count = 0
-        self.min_thread = 3
+        self.min_thread = 0
         for i in range(0, self.min_thread):
             self.create_thread()
 

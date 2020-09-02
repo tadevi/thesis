@@ -120,7 +120,7 @@ def test_camera_flow():
 
 
 def test_gps_flow():
-    from server.http import make_web
+    from server.fog_http import make_web
     import threading
     from modules.network import Network
     from modules import utils
@@ -191,7 +191,7 @@ def test_post_camera_cloud():
 def test_post_fake_data():
     from fake_data import fake_gps
     from fake_data import fake_water
-    from server.http import make_web
+    from server.fog_http import make_web
     import threading
 
     t = threading.Thread(target=make_web)
@@ -207,7 +207,7 @@ def test_post_fake_data():
 
 
 def test_fog1_stream():
-    from server.http import make_web
+    from server.fog_http import make_web
     import threading
     from modules.network import Network
 

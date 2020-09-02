@@ -1,12 +1,18 @@
 import json
 import os
 from pathlib import Path
+from time import sleep
 
 from bson import ObjectId
 from cv2 import cv2
-from flask import Flask, render_template, request, Response, send_from_directory
+from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for, make_response
+from flask_login import login_user, logout_user, current_user, login_required, UserMixin, LoginManager
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField
+from wtforms.validators import DataRequired
 
 from data_dispatcher import DataDispatcher
+from data_dispatcher.UrlToStream import pafy_to_stream
 from modules import utils, storage
 from resource_manager.GlobalConfigs import GlobalConfigs
 from resource_manager.ThreadPool import ThreadPool
@@ -32,11 +38,38 @@ def get_database():
 
 def make_web():
     app = Flask(__name__, template_folder='.')
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    SECRET_KEY = os.urandom(32)
+    app.config['SECRET_KEY'] = SECRET_KEY
     database = get_database()
+    lm = LoginManager()  # flask-loginmanager
+    lm.init_app(app)  # init the login manager
 
-    @app.route('/')
-    def index():
-        return render_template('index.html')
+    # provide login manager with load_user callback
+    @lm.user_loader
+    def load_user(user_id):
+        return User('mgt', '12345678')
+
+    # App main route + generic routing
+    @app.route('/', defaults={'path': 'index.html'})
+    @app.route('/<path>')
+    def index(path):
+        if not current_user.is_authenticated:
+            # test
+            user = User("mgt", "12345678")
+            login_user(user)
+
+            # return redirect(url_for('login'))
+
+        try:
+
+            # try to match the pages defined in -> pages/<input file>
+            return render_template('templates/layouts/default.html',
+                                   content=render_template('templates/pages/' + path))
+        except:
+
+            return render_template('templates/layouts/default.html',
+                                   content=render_template('templates/pages/index.html'))
 
     '''
     ai services
@@ -88,19 +121,6 @@ def make_web():
     camera services
     '''
 
-    @app.route('/camera', methods=['GET'])
-    def get_camera():
-        camera_id = request.args.get('id')
-
-        if camera_id is not None:
-            data = database.find_one('camera', {'camera_id': str(camera_id)})
-            data = utils.json_encode(data) if data is not None else {}
-        else:
-            cursor = database.find_many('camera', {})
-            data = [utils.json_encode(document) for document in cursor]
-
-        return {"data": data}
-
     @app.route('/stream/', methods=['POST'])
     def stream():
         data = request.json
@@ -113,9 +133,15 @@ def make_web():
     def gen(channel, channel_id):
         queue = channel.get(channel_id)
         if queue is not None:
+            last_frame = None
             while True:
                 frame = queue.get()
-                _, frame = cv2.imencode('.JPEG', frame)
+                if frame is None:
+                    frame = last_frame
+                else:
+                    _, frame = cv2.imencode('.JPEG', frame)
+                    last_frame = frame
+
                 yield (b'--frame\r\n'
                        b'Content-Type:image/jpeg\r\n'
                        b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
@@ -132,13 +158,25 @@ def make_web():
             return Response(gen(get_channel('stream'), request.args.get('stream_id')),
                             mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    @app.route('/camera/', methods=['POST'])
-    def add_camera():
-        json = request.json
-        database.insert_one('camera', json)
-        return {
-            "status": "success"
-        }
+    @app.route('/camera/', methods=['POST', 'GET'])
+    def camera():
+        if request.method == 'POST':
+            json = request.json
+            database.upsert_one('camera', json, {'camera_id': json.get('camera_id')})
+            return {
+                "status": "success"
+            }
+        elif request.method == 'GET':
+            camera_id = request.args.get('id')
+
+            if camera_id is not None:
+                data = database.find_one('camera', {'camera_id': str(camera_id)})
+                data = utils.json_encode(data) if data is not None else {}
+            else:
+                cursor = database.find_many('camera', {})
+                data = [utils.json_encode(document) for document in cursor]
+
+            return {"data": data}
 
     '''
     iot services
@@ -189,6 +227,24 @@ def make_web():
         else:
             return {}
 
+    @app.route('/node_id', methods=['GET'])
+    def get_node_id():
+        ip = request.args.get('ip')
+        port = request.args.get('port')
+
+        if None not in [ip, port]:
+            nodes_ip = GlobalConfigs.instance().nodes_ip.get("layers")
+            for layer, layer_ips in nodes_ip.items():
+                if layer != "cloud":
+                    for idx, ip_port in enumerate(layer_ips):
+                        if (ip == ip_port.get('ip') or GlobalConfigs.instance().test_on_local) and port == ip_port.get(
+                                'port'):
+                            id = str(layer) + '.' + str(idx + 1)
+                            return {
+                                'id': id
+                            }
+        return {}
+
     @app.route('/last_update', methods=['GET'])
     def get_last_update():
         return {
@@ -215,4 +271,75 @@ def make_web():
             "message": "Server received your request!"
         }
 
+    # Authenticate user
+    @app.route('/login.html', methods=['GET', 'POST'])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for('index'))
+
+        # Declare the login form
+        form = LoginForm(request.form)
+
+        # Flask message injected into the page, in case of any errors
+        msg = None
+
+        # check if both http method is POST and form is valid on submit
+        if form.validate_on_submit():
+
+            # assign form data to variables
+            username = request.form.get('username', '', type=str)
+            password = request.form.get('password', '', type=str)
+
+            if username == 'mgt':
+                user = User(username, password)
+                login_user(user)
+                return redirect(url_for('index'))
+            else:
+                msg = "Unkkown user"
+
+        return render_template('templates/layouts/default.html',
+                               content=render_template('templates/pages/login.html', form=form, msg=msg))
+
+    @app.route('/logout.html', methods=['GET', 'POST'])
+    def logout():
+        logout_user()
+        return redirect(url_for('login'))
+
+    @app.route('/test_video')
+    def test_video():
+
+        return Response(test_gen(request.args.get('stream_id')), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+    def test_gen(stream_id):
+        if stream_id is not None and stream_id != '1':
+            url = 'https://www.youtube.com/watch?v=Q0avX5iA4As'
+        else:
+            url = 'https://www.youtube.com/watch?v=YJerlcRThB8'
+        cam = pafy_to_stream(url)
+        fps = cam.get(cv2.CAP_PROP_FPS)
+        _, frame = cam.read()
+        while frame is not None:
+            _, frame = cv2.imencode('.JPEG', frame)
+
+            yield (b'--frame\r\n'
+                   b'Content-Type:image/jpeg\r\n'
+                   b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
+                                                                    b'\r\n' + frame.tostring() + b'\r\n')
+
+            sleep(1 / fps)
+            _, frame = cam.read()
+        yield b'--\r\n'
+
     app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)
+
+
+class User(UserMixin):
+    def __init__(self, username, password):
+        self.id = username
+        self.username = username
+        self.password = password
+
+
+class LoginForm(FlaskForm):
+    username = StringField(u'Username', validators=[DataRequired()])
+    password = PasswordField(u'Password')

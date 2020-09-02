@@ -1,0 +1,30 @@
+<div class="panel-header panel-header-sm">
+</div>
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="title">Camera Surveillance System</h5>
+                </div>
+
+                <div class="card-header">
+                    <label for="cameraSelect">Choose a camera:</label>
+                    <select name="cameraSelect" id="cameraSelect"></select>
+                </div>
+
+                <div class="card-header" style="margin-bottom:30px">
+                    <img id="cameraView" style="-webkit-user-select: none;margin: auto;" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+        var cameras = [];
+        camera.updateCameraList(cameras)
+        camera.loadAllCamera();
+    })
+</script>

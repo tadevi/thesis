@@ -1,0 +1,4 @@
+{
+    "test_on_local": "true",
+    "cloud_url": "http://localhost:5000"
+}

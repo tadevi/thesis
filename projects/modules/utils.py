@@ -13,11 +13,14 @@ def json_encode(document: dict):
     return document
 
 
-def get_ip():
-    # return requests.get('https://api.ipify.org').text
+def get_internal_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
+
+
+def get_external_ip():
+    return requests.get('https://api.ipify.org').text
 
 
 def get_base_url(ip, port):

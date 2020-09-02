@@ -12,6 +12,10 @@
       {
         "ip": "localhost",
         "port": "3002"
+      },
+      {
+        "ip": "localhost",
+        "port": "3003"
       }
     ],
     "2": [

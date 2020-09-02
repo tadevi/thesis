@@ -69,3 +69,8 @@ class Main(Base):
 
     def find_many(self, collection, query):
         return self.db[collection].find(query)
+
+    # insert or update if exists
+    # key: {'key':'value'}
+    def upsert_one(self, collection, document, key):
+        self.db[collection].update(key, document, upsert=True)
