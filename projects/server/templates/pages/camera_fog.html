@@ -1,0 +1,24 @@
+<script src="/static/assets/js/pages/camera_fog.js"></script>
+<div class="panel-header panel-header-sm">
+</div>
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="title">Camera Surveillance System</h5>
+                </div>
+
+                <label id="noCamLabel" for="cameraGrid" style="padding: 15px;">No camera to display</label>
+
+                <div class="grid-container" id="cameraGrid"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+        camera_fog.init();
+    })
+</script>

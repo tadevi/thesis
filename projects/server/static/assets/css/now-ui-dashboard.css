@@ -1291,7 +1291,12 @@ p.description {
 
 .text-primary,
 a.text-primary:focus, a.text-primary:hover {
-  color: #f96332 !important; }
+    color: #fff !important;
+    padding: 5px;
+    font-weight: bold;
+    line-height: 2em;
+    background-color: #555;
+}
 
 .text-info,
 a.text-info:focus, a.text-info:hover {
@@ -2564,6 +2569,8 @@ Created using IcoMoon - icomoon.io
     width: 100%; }
 
 .table-responsive {
+   padding-right:20px;
+    height:400px;
   overflow: auto;
   padding-bottom: 10px; }
 
@@ -3860,3 +3867,12 @@ Created using IcoMoon - icomoon.io
     -webkit-overflow-scrolling: touch; } }
 
 /*# sourceMappingURL=now-ui-dashboard.css.map */
+.grid-container {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(auto-fill, 400px);
+  grid-row-gap: .5em;
+  grid-column-gap: 1em;
+  padding: 15px;
+}

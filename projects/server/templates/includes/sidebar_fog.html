@@ -1,0 +1,59 @@
+<div class="sidebar" data-color="orange">
+    <!-- Tip 1: You can change the color of the sidebar using: data-color="blue | green | orange | red | yellow" -->
+    <div class="logo">
+        <a href="https://github.com/app-generator/flask-now-ui-dashboard" class="simple-text logo-normal">
+            IoT Fog
+        </a>
+    </div>
+    {% if current_user.is_authenticated %}
+    <div class="sidebar-wrapper" id="sidebar-wrapper">
+        <ul class="nav">
+            <li class="active ">
+                <a href="/">
+                    <i class="now-ui-icons design_app"></i>
+                    <p>Dashboard</p>
+                </a>
+            </li>
+            <li>
+                <a href="/user.html">
+                    <i class="now-ui-icons users_single-02"></i>
+                    <p>User Profile</p>
+                </a>
+            </li>
+            <li>
+                <a href="/notifications_fog.html">
+                    <i class="now-ui-icons ui-1_bell-53"></i>
+                    <p>Notifications</p>
+                </a>
+            </li>
+            <li>
+                <a href="/camera_fog.html">
+                    <i class="now-ui-icons media-1_camera-compact"></i>
+                    <p>Camera Surveillance</p>
+                </a>
+            </li>
+            <li>
+                <a href="/air_fog.html">
+                    <i class="now-ui-icons media-2_sound-wave"></i>
+                    <p>Air Monitor</p>
+                </a>
+            </li>
+
+            <li>
+                <a href="/device.html">
+                    <i class="now-ui-icons education_atom"></i>
+                    <p>Device</p>
+                </a>
+            </li>
+
+            <li>
+                <a href={{ url_for('logout') }}>
+                <i class="now-ui-icons media-1_button-power"></i>
+                <p>Logout</p>
+                </a>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
+

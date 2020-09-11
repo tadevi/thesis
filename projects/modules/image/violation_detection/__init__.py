@@ -1,5 +1,4 @@
 import os
-from queue import Queue
 
 from modules.image.violation_detection.centroidtracker import CentroidTracker
 
@@ -12,8 +11,8 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from modules import log
-from modules.base import Filter
+from modules import log, network, utils
+from modules.base import Base
 import cv2
 
 parent_folder_path = os.path.abspath(os.path.dirname(__file__))
@@ -46,18 +45,27 @@ tag = "Violation detection"
 log.i(tag, "loaded graph")
 
 
-class Main(Filter):
+class Main(Base):
     def __init__(self, configs):
         self.configs = configs
         self.firstFrame = None
-        self.line_start = (0, 4.9 / 10)
-        self.line_end = (1, 6 / 10)
+
+        if configs.get('line_start') is not None:
+            self.line_start = tuple(configs.get('line_start'))
+        else:
+            self.line_start = (0, 4.9 / 10)
+
+        if configs.get('line_end') is not None:
+            self.line_end = tuple(configs.get('line_end'))
+        else:
+            self.line_end = (1, 6 / 10)
+
         self.violation_count = 0
         self.tracker = CentroidTracker(maxDisappeared=30)
         self.counted_ids = set()
         self.track_ids = set()
 
-    def run(self, input: np.ndarray) -> bool:
+    def run(self, input: np.ndarray):
         # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
         image_np_expanded = np.expand_dims(input, axis=0)
 
@@ -93,54 +101,82 @@ class Main(Filter):
         rects = self.non_max_suppression_slow(rects, 0.3)
 
         objects = self.tracker.update(rects)
+        has_violation = False
+
+        targets = []
 
         # loop over the tracked objects
         for (objectID, centroid) in objects.items():
             center_x = centroid[0]
             center_y = centroid[1]
 
-            y_t = (center_x * (self.line_end[1] - self.line_start[1]) / w + self.line_start[1])*h
+            y_t = (center_x * (self.line_end[1] - self.line_start[1]) / w + self.line_start[1]) * h
 
             # if under line add to track list
             if y_t <= center_y and objectID not in self.track_ids and objectID not in self.counted_ids:
                 self.track_ids.add(objectID)
             # if appear in track list and above line so it's a violation
-            elif y_t > center_y and objectID in self.track_ids and objectID not in self.counted_ids:
+            elif center_y + 75 > y_t > center_y + 50 and objectID in self.track_ids and objectID not in self.counted_ids:
                 self.violation_count += 1
+                has_violation = True
 
                 self.counted_ids.add(objectID)
                 self.track_ids.discard(objectID)
 
+                targets.append(centroid)
+
             # draw both the ID of the object and the centroid of the
             # object on the output frame
-            text = "Vehicle {}".format(objectID)
-            cv2.putText(input, text, (center_x - 10, center_y - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-            cv2.circle(input, (center_x, center_y), 4, (0, 255, 0), -1)
+            # text = "Vehicle {}".format(objectID)
+            # cv2.putText(input, text, (center_x - 10, center_y - 10),
+            #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
+            # cv2.circle(input, (center_x, center_y), 4, (0, 255, 0), -1)
 
-        self.draw_result_on_frame(input, rects)
+        self.draw_result_on_frame(input, rects, targets)
 
         vehicle_count = abs(int(len(res_df.index)))
         if vehicle_count > 0:
             log.v(tag, "in", "{:.2f}".format((end_time - start_time) * 1000), "(ms) detected", vehicle_count,
                   "vehicle(s)")
-        return True
-        # return True if people_count > 0 else False
 
-    def draw_result_on_frame(self, frame, rects):
+        if has_violation:
+            imencoded = cv2.imencode(".jpg", input)[1]
+
+            timestamp = utils.current_milli_time()
+            file = {'file': (
+                'cam{}_{}.jpg'.format(self.configs['camera_id'], timestamp), imencoded.tostring(), 'image/jpeg',
+                {'Expires': '0'}
+            )}
+            data = {
+                "timestamp": timestamp,
+                'camera_id': self.configs['camera_id'],
+                'type': 'Red light violation'
+            }
+            network.Network.instance().post(
+                self.configs['cloud_url'] + '/violation',
+                files=file, data=data, timeout=5
+            )
+
+    def draw_result_on_frame(self, frame, rects, targets):
         # Display the results
         h = frame.shape[0]
         w = frame.shape[1]
 
         # draw line
-        pt1 = (int(self.line_start[0]*w), int(self.line_start[1]*h))
-        pt2 = (int(self.line_end[0]*w), int(self.line_end[1]*h))
+        pt1 = (int(self.line_start[0] * w), int(self.line_start[1] * h))
+        pt2 = (int(self.line_end[0] * w), int(self.line_end[1] * h))
         cv2.line(frame, pt1, pt2, (255, 0, 0), 3)
 
         cv2.putText(frame, "Violation count: " + str(self.violation_count), (5, 20), cv2.FONT_HERSHEY_DUPLEX, 0.5,
                     (59, 101, 255), 1)
 
         for left, top, right, bottom in rects:
+            color = (66, 161, 79)
+            for target in targets:
+                if left <= target[0] <= right and top <= target[1] <= bottom:
+                    color = (0, 0, 255)
+                    break
+
             # Scale back up face locations since the frame we detected in was scaled to 1/4 size
             # top = int(top * h)
             # right = int(right * w)
@@ -148,7 +184,7 @@ class Main(Filter):
             # left = int(left * w)
 
             # Draw a box around the face
-            cv2.rectangle(frame, (left, top), (right, bottom), (66, 161, 79), 2)
+            cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
 
             # Draw a label with a name below the face
             # cv2.rectangle(frame, (left, bottom - 28), (right, bottom), (0, 0, 255), cv2.FILLED)

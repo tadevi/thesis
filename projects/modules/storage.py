@@ -74,3 +74,6 @@ class Main(Base):
     # key: {'key':'value'}
     def upsert_one(self, collection, document, key):
         self.db[collection].update(key, document, upsert=True)
+
+    def delete_col(self, collection):
+        self.db[collection].drop()

@@ -1,0 +1,55 @@
+<script src="/static/assets/js/pages/air.js"></script>
+
+<div class="panel-header panel-header-sm">
+</div>
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="title">Ho Chi Minh City Air Quality Data</h5>
+                </div>
+
+                <label id="noLocationLabel" style="padding: 15px;">No location to display</label>
+
+                <div class="row" style="padding:15px;">
+                    <div class="table-responsive col-md-2" id="locationList"></div>
+                    <div class="col-md-10" id="locationDetail" style="display:none;">
+                        <h5 id="locationDesc" style="padding: 15px;"></h5>
+                        <div class="table-responsive">
+                            <table class="table" id="airTable">
+                                <thead class="text-primary">
+                                <tr>
+                                    <th>
+                                        Device ID
+                                    </th>
+                                    <th>
+                                        Location
+                                    </th>
+                                    <th>
+                                        Timestamp
+                                    </th>
+                                    <th>
+                                        PM2.5
+                                    </th>
+                                    <th class="text-right">
+                                        Evaluation
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody id="airTableBody" class="tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+        air_page.init();
+    })
+</script>

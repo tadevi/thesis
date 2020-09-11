@@ -1,0 +1,21 @@
+{
+  "data_type": "scalar",
+  "name": "air",
+  "modules": [
+    {
+      "package": "modules.text.water",
+      "name": "validate"
+    },
+    {
+      "package": "modules.text.water",
+      "name": "evaluate"
+    },
+    {
+      "package": "modules.text.water",
+      "name": "send_to_cloud",
+      "configs": {
+        "cloud_url": "http://cloud_ip:3000"
+      }
+    }
+  ]
+}

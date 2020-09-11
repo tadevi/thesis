@@ -28,6 +28,7 @@ class GlobalConfigs(metaclass=Singleton):
         # for stream
         self.FPS = 1 / 24
         self.test_on_local = True
+        self.db = None
 
     def init_node(self):
         with open("common_meta.json", 'r') as f:
@@ -123,7 +124,11 @@ class GlobalConfigs(metaclass=Singleton):
         else:
             log.v(tag, "No update needed, use local configs and modules")
 
-            self.config = self.parse_config(config_name, folder_name="config_cache")
+            try:
+                self.config = self.parse_config(config_name, folder_name="config_cache")
+            except:
+                log.v(tag, "config_cache not found, use config instead")
+                self.config = self.parse_config(config_name, folder_name="config")
 
     def cache_configs(self, config_name, configs):
         config_cache_folder_relative_path = "config_cache" + "/" + config_name

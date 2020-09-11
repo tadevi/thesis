@@ -1,3 +1,4 @@
+<script src="/static/assets/js/pages/camera.js"></script>
 <div class="panel-header panel-header-sm">
 </div>
 <div class="content">
@@ -8,13 +9,32 @@
                     <h5 class="title">Camera Surveillance System</h5>
                 </div>
 
-                <div class="card-header">
-                    <label for="cameraSelect">Choose a camera:</label>
-                    <select name="cameraSelect" id="cameraSelect"></select>
-                </div>
+                <label id="noCamLabel" style="padding: 15px;">No camera to display</label>
 
-                <div class="card-header" style="margin-bottom:30px">
-                    <img id="cameraView" style="-webkit-user-select: none;margin: auto;" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
+                <div class="row" style="padding:15px;">
+                    <div class="table-responsive col-md-2" id="cameraList"></div>
+                    <div class="col-md-10" id="cameraDetail" style="display:none;">
+                        <h5 id="cameraDesc" style="padding: 15px;"></h5>
+                        <div class="table-responsive">
+                            <table class="table" id="violationTable">
+                                <thead class="text-primary">
+                                <tr>
+                                    <th>
+                                        Timestamp
+                                    </th>
+                                    <th>
+                                        Type
+                                    </th>
+                                    <th class="text-right">
+                                        Evidence
+                                    </th>
+                                </tr>
+                                </thead>
+                                <tbody id="violationTableBody" class="tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -23,8 +43,6 @@
 
 <script>
     $(document).ready(function(){
-        var cameras = [];
-        camera.updateCameraList(cameras)
-        camera.loadAllCamera();
+        camera_page.init();
     })
 </script>

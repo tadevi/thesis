@@ -1,5 +1,7 @@
 import time
 import socket
+from datetime import datetime
+
 import requests
 
 
@@ -28,3 +30,7 @@ def get_base_url(ip, port):
         return "http://" + ip + ":" + port
     else:
         return None
+
+
+def get_time_formatted(millis):
+    return datetime.fromtimestamp(millis/1000).isoformat(sep=' ', timespec='seconds')

@@ -1,0 +1,43 @@
+<script src="/static/assets/js/pages/device.js"></script>
+<div class="panel-header panel-header-sm">
+</div>
+<div class="content">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">Devices Management</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table" id="table">
+                            <thead class="text-primary">
+                            <tr>
+                                <th>
+                                    Device ID
+                                </th>
+                                <th>
+                                    Type
+                                </th>
+                                <th>
+                                    Location
+                                </th>
+                                <th>
+                                </th>
+                            </tr>
+                            </thead>
+                            <tbody id="tableBody" class="tbody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function(){
+        device_page.init();
+    })
+</script>

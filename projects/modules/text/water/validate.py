@@ -1,9 +1,9 @@
 from typing import Dict
 
 from modules.base import Filter
-from modules import log
+from modules import log, utils
 
-tag = "Validate Water"
+tag = "Validate Air Record"
 
 
 class Main(Filter):
@@ -11,13 +11,13 @@ class Main(Filter):
         self.configs = configs
 
     def run(self, input: Dict):
-        longitude = input.get("longitude")
-        latitude = input.get("latitude")
-        temperature = input.get("temperature")
-        time = input.get("datetime")
+        device_id = input.get("device_id")
+        location = input.get("location")
+        timestamp = input.get("timestamp")
+        pm25 = input.get("pm25")
 
-        result = False if (None in [longitude, latitude, temperature, time] or
-                           longitude < -180 or longitude > 180 or
-                           latitude < -90 or latitude > 90) else True
+        result = False if (None in [device_id, location, timestamp, pm25] or
+                           timestamp > utils.current_milli_time() or
+                           not 0 < pm25 < 500) else True
         log.i(tag, "validated", result, "for input", input)
         return result

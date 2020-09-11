@@ -3,6 +3,7 @@
 # This module should have def run(input, configs)
 # @input: received data from server
 # @configs: addition configs such as @database_name, @collection_name, @mongo_url
+import traceback
 
 import requests
 
@@ -26,12 +27,15 @@ class Network(metaclass=Singleton):
             "data": data
         }
 
-    def post(self, url, json=None):
-        ThreadPool.instance().get_thread().put_job(ThreadTask(self.__post, (url, json)))
+    def post(self, url, json=None, threading=True, **kwargs):
+        if threading:
+            ThreadPool.instance().get_thread().put_job(ThreadTask(self.__post, (url, json, kwargs)))
+        else:
+            self.__post(url, json, kwargs)
 
-    def __post(self, url, json):
+    def __post(self, url, json, kwargs):
         try:
-            response = requests.post(url, json=json)
+            response = requests.post(url, json=json, **kwargs)
             log.i(tag, "POST to url", url, "\nwith data", json, "\nstatus code:", response.status_code, "\nreason:",
                   response.reason)
 

@@ -2,7 +2,7 @@ import os
 
 from cv2 import cv2
 
-from modules import log
+from modules import log, utils, network
 
 tag = "Test"
 
@@ -242,5 +242,16 @@ def test_fog1_stream():
 #         cv2.waitKey(int(1/cap.get(cv2.CAP_PROP_FPS)*1000))
 
 
-# if __name__ == '__main__':
-#     run()
+if __name__ == '__main__':
+    cap = cv2.VideoCapture('video7.mp4')
+    _, input = cap.read()
+    imencoded = cv2.imencode(".jpg", input)[1]
+
+    timestamp = utils.current_milli_time()
+    file = {'file': (
+    'cam{}_{}.jpg'.format(1, timestamp), imencoded.tostring(), 'image/jpeg', {'Expires': '0'})}
+    data = {"timestamp": timestamp}
+    network.Network.instance().post(
+        'http://localhost:5000' + '/camera_capture',
+        files=file, data=data, timeout=5, threading=False
+    )

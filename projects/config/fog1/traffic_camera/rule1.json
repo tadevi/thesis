@@ -14,15 +14,7 @@
       "name": "mjpeg",
       "configs": {
         "type": "stream",
-        "cloud_url": "http://fog2_ip:3000"
-      }
-    },
-    {
-      "package": "modules.stream",
-      "name": "mjpeg",
-      "configs": {
-        "type": "analysis",
-        "fog2_url": "http://fog2_ip:3000"
+        "cloud_url": "http://cloud_ip:3000"
       }
     }
   ]

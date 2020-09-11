@@ -8,19 +8,27 @@ class DataDispatcher(metaclass=Singleton):
         return DataDispatcher()
 
     def __init__(self):
-        self.__channels__ = {}
+        self.channels = {}
 
     def dispatch(self, data):
-        type_name = data['name']
-        channel = self.__channels__.get(type_name)
+        channel_name = data['name']
+        if data.get('type') == 'scala':
+            channel_id = channel_name
+        else:
+            channel_id = channel_name + data['camera_id']
+
+        channel = self.channels.get(channel_id)
         if channel is None:
-            channel_id = type_name
             if data.get('type') == 'scala':
-                channel = ScalaChannel(channel_id, data)
+                channel = ScalaChannel(channel_name, channel_name, data)
             else:
-                channel = StreamChannel(channel_id, data)
-            self.__channels__[channel_id] = channel
+                channel = StreamChannel(channel_id, channel_name, data)
+            self.channels[channel_id] = channel
 
         if data.get('type') == 'scala':
             channel.on_next(data)
         # stream channel will get next item itself by reading from url
+
+    def stream_channels_data(self):
+        stream_channels = dict(filter(lambda elem: isinstance(elem[1], StreamChannel), self.channels.items()))
+        return list(map(lambda channel: channel.stream_data, stream_channels.values()))

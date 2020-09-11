@@ -1,23 +1,28 @@
 import json
 import os
+from functools import reduce
 from pathlib import Path
 from time import sleep
 
+import pymongo
 from bson import ObjectId
 from cv2 import cv2
-from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for, make_response
+from flask import Flask, render_template, request, Response, send_from_directory, redirect, url_for, make_response, \
+    send_file
 from flask_login import login_user, logout_user, current_user, login_required, UserMixin, LoginManager
 from flask_wtf import FlaskForm
+from werkzeug.utils import secure_filename
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired
 
 from data_dispatcher import DataDispatcher
 from data_dispatcher.UrlToStream import pafy_to_stream
-from modules import utils, storage
+from modules import utils, storage, log
 from resource_manager.GlobalConfigs import GlobalConfigs
 from resource_manager.ThreadPool import ThreadPool
 from resource_manager.ThreadTask import ThreadTask
 from server.channel import get_channel
+from flask_socketio import SocketIO
 
 tag = 'CLOUD HTTP'
 
@@ -30,6 +35,8 @@ class JSONEncoder(json.JSONEncoder):
 
 
 encoder = JSONEncoder()
+
+last_post_time = None
 
 
 def get_database():
@@ -44,14 +51,24 @@ def make_web():
     database = get_database()
     lm = LoginManager()  # flask-loginmanager
     lm.init_app(app)  # init the login manager
+    app.debug = True
+    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
     # provide login manager with load_user callback
     @lm.user_loader
     def load_user(user_id):
         return User('mgt', '12345678')
 
+    # @app.after_request
+    # def apply_caching(resp):
+    #     resp.headers['Access-Control-Allow-Origin'] = '*'
+    #     resp.headers['Access-Control-Allow-Methods'] = '*'
+    #     resp.headers['Access-Control-Allow-Domain'] = '*'
+    #     resp.headers['Access-Control-Allow-Credentials'] = True
+    #     return resp
+
     # App main route + generic routing
-    @app.route('/', defaults={'path': 'index.html'})
+    @app.route('/', defaults={'path': 'notifications.html'})
     @app.route('/<path>')
     def index(path):
         if not current_user.is_authenticated:
@@ -69,100 +86,123 @@ def make_web():
         except:
 
             return render_template('templates/layouts/default.html',
-                                   content=render_template('templates/pages/index.html'))
+                                   content=render_template('templates/pages/notifications.html'))
 
     '''
     ai services
     '''
 
-    @app.route('/appearance', methods=['GET'])
-    def get_people():
-        from_time = request.args.get('from')
-        if from_time is not None:
-            try:
-                from_time = int(from_time)
-            except:
-                return {"data": []}
-        else:
-            from_time = 0
-
-        end_time = request.args.get('to')
-        if end_time is not None:
-            try:
-                end_time = int(end_time)
-            except:
-                return {"data": []}
-        else:
-            end_time = utils.current_milli_time()
-
-        cursor = database.find_many('appearance',
-                                    {'$or': [
-                                        {'start_time': {
-                                            '$gte': from_time,
-                                            '$lte': end_time,
-                                        }},
-                                        {'end_time': {
-                                            '$gte': from_time,
-                                            '$lte': end_time,
-                                        }},
-                                    ]})
-
-        return {"data": [utils.json_encode(document) for document in cursor]}
-
-    @app.route('/appearance', methods=['POST'])
-    def save_appearance():
-        json = request.json
-        database.insert_one('appearance', json)
-        return {
-            "status": "success"
-        }
-
     '''
-    camera services
+    air
     '''
 
-    @app.route('/stream/', methods=['POST'])
-    def stream():
+    @app.route('/iot/', methods=['POST'])
+    def iot():
         data = request.json
-        DataDispatcher.instance().dispatch(data)
+        on_new_iot_record(data)
         return {
             "status_code": 200,
             "message": "Server received your request!"
         }
 
-    def gen(channel, channel_id):
-        queue = channel.get(channel_id)
-        if queue is not None:
-            last_frame = None
-            while True:
-                frame = queue.get()
-                if frame is None:
-                    frame = last_frame
-                else:
-                    _, frame = cv2.imencode('.JPEG', frame)
-                    last_frame = frame
+    def on_new_iot_record(data):
+        event_args = data['data']
+        event_name = "iot/" + data['name'] + '/' + event_args['district']
 
-                yield (b'--frame\r\n'
-                       b'Content-Type:image/jpeg\r\n'
-                       b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
-                                                                        b'\r\n' + frame.tostring() + b'\r\n')
-        else:
-            yield b'--\r\n'
+        log.v(tag, "Emitted topic:", event_name, "with data:", event_args)
 
-    @app.route('/video')
-    def video():
-        if request.args.get('analysis_id') is not None:
-            return Response(gen(get_channel('analysis'), request.args.get('analysis_id')),
-                            mimetype='multipart/x-mixed-replace; boundary=frame')
-        elif request.args.get('stream_id') is not None:
-            return Response(gen(get_channel('stream'), request.args.get('stream_id')),
-                            mimetype='multipart/x-mixed-replace; boundary=frame')
+        socketio.emit(event_name, event_args)
 
-    @app.route('/camera/', methods=['POST', 'GET'])
+        database.insert_one(data['name'], data['data'])
+
+        if data['name'] == 'air':
+            cursor = database.db[data['name']].find({}).sort("timestamp", pymongo.DESCENDING).limit(20)
+            records = []
+            for record in cursor:
+                records.append(utils.json_encode(record))
+            records.append(event_args)
+            avg = round(reduce(lambda x, y: x + y['pm25'], records, 0) / len(records), 2)
+
+            if avg < 150:
+                type = 'warning'
+                eval = "Unhealthy"
+            elif avg < 200:
+                type = 'warning'
+                eval = "Harmful"
+            elif avg < 300:
+                type = 'primary'
+                eval = "Very harmful"
+            else:
+                type = 'danger'
+                eval = "Dangerous"
+
+            global last_post_time
+
+            cur_time = utils.current_milli_time()
+            if avg >= 100 and (last_post_time is None or cur_time - last_post_time > 10000):
+                noti = {
+                    'timestamp': utils.current_milli_time(),
+                    'type': type,
+                    'message': 'At {}, average PM2.5 value of whole city is {}, which is evaluated as <b>{}</b>'.format(
+                        utils.get_time_formatted(event_args['timestamp']),
+                        avg,
+                        eval
+                    )
+                }
+                database.insert_one('notification', utils.json_encode(noti))
+                socketio.emit("notification", utils.json_encode(noti))
+                last_post_time = cur_time
+
+
+    @app.route('/iot/', methods=['GET'])
+    def get_iot():
+        col_name = request.args.get('name')
+        district = request.args.get('district')
+        cursor = database.db[col_name].find({'district': district}).sort("timestamp", pymongo.DESCENDING).limit(20)
+        res = []
+        for record in cursor:
+            res.append(utils.json_encode(record))
+        return {
+            'data': res
+        }
+
+    @app.route('/iot_locations', methods=['GET'])
+    def get_iot_locations():
+        return {
+            'data': [
+                'Thu Duc',
+                'Binh Thanh',
+                'Tan Binh',
+                'District 1',
+                'District 2',
+                'District 3',
+                'District 4',
+                'District 5',
+                'District 6',
+                'District 7',
+                'District 8',
+                'District 9',
+                'District 10',
+                'District 11',
+                'District 12',
+            ]
+        }
+
+    @socketio.on('my event')
+    def handle_my_custom_event(json):
+        log.v(tag, 'received json:', json)
+
+    cameras = {}
+
+    @app.route('/cameras', methods=['POST', 'GET'])
     def camera():
         if request.method == 'POST':
             json = request.json
-            database.upsert_one('camera', json, {'camera_id': json.get('camera_id')})
+
+            # database.upsert_one('camera', json, {'camera_id': json.get('camera_id')})
+            cameras[json.get('camera_id')] = json
+
+            on_new_camera(json)
             return {
                 "status": "success"
             }
@@ -170,21 +210,103 @@ def make_web():
             camera_id = request.args.get('id')
 
             if camera_id is not None:
-                data = database.find_one('camera', {'camera_id': str(camera_id)})
+                # data = database.find_one('camera', {'camera_id': str(camera_id)})
+                data = cameras[str(camera_id)]
+
                 data = utils.json_encode(data) if data is not None else {}
             else:
-                cursor = database.find_many('camera', {})
-                data = [utils.json_encode(document) for document in cursor]
+                # cursor = database.find_many('camera', {})
+                # data = [utils.json_encode(document) for document in cursor]
+                data = list(cameras.values())
 
             return {"data": data}
 
+    def on_new_camera(camera):
+        event_name = "new camera"
+        log.v(tag, "Emitted topic:", event_name, "with data:", camera)
+
+        socketio.emit(event_name, camera)
+
+        noti = {
+            'timestamp': utils.current_milli_time(),
+            'type': 'info',
+            'message': 'At {}, camera with ID <b>{}</b> has connected to system'.format(
+                utils.get_time_formatted(utils.current_milli_time()),
+                camera['camera_id']
+            )
+        }
+        database.insert_one('notification', utils.json_encode(noti))
+        socketio.emit("notification", utils.json_encode(noti))
+
     '''
-    iot services
+    ai services
     '''
 
-    @app.route('/traffic', methods=['GET'])
-    def get_predict_traffic():
-        pass
+    @app.route('/violation', methods=['POST'])
+    def store_violation():
+        record = {
+            'timestamp': request.form.get('timestamp'),
+            'camera_id': request.form.get('camera_id'),
+            'type': request.form.get('type')
+        }
+        database.insert_one('violation', record)
+        f = request.files['file']
+        Path(GlobalConfigs.instance().project_root + "/violation").mkdir(parents=True, exist_ok=True)
+        f.save('violation/' + secure_filename(f.filename))
+        on_new_violation_record(record)
+        return {
+            "status_code": 200,
+            "message": "Server received your request!"
+        }
+
+    def on_new_violation_record(violation):
+        event_name = "violation/cam" + violation['camera_id']
+        violation['evidence'] = 'http://{}:{}/evidence?camera_id={}&timestamp={}'.format(
+            GlobalConfigs.instance().get_node_ip(),
+            GlobalConfigs.instance().get_port(),
+            violation['camera_id'],
+            violation['timestamp']
+        )
+        log.v(tag, "Emitted topic:", event_name, "with data:", violation)
+        socketio.emit(event_name, utils.json_encode(violation))
+
+    @app.route('/violation', methods=['GET'])
+    def get_violations():
+        cursor = database.db['violation'].find({'camera_id': request.args.get('camera_id')}).sort("timestamp",
+                                                                                                  pymongo.DESCENDING).limit(
+            20)
+        res = []
+        for record in cursor:
+            record['evidence'] = 'http://{}:{}/evidence?camera_id={}&timestamp={}'.format(
+                GlobalConfigs.instance().get_node_ip(),
+                GlobalConfigs.instance().get_port(),
+                record['camera_id'],
+                record['timestamp']
+            )
+            res.append(utils.json_encode(record))
+        return {
+            'data': res
+        }
+
+    @app.route('/evidence', methods=['GET'])
+    def get_evidence():
+        return send_file(
+            '{}/violation/cam{}_{}.jpg'.format(
+                GlobalConfigs.instance().project_root,
+                request.args.get('camera_id'),
+                request.args.get('timestamp')
+            ),
+            mimetype='image/jpg')
+
+    @app.route('/notifications', methods=['GET'])
+    def get_notifications():
+        cursor = database.db['notification'].find({}).sort("timestamp", pymongo.DESCENDING).limit(20)
+        res = []
+        for record in cursor:
+            res.append(utils.json_encode(record))
+        return {
+            'data': res
+        }
 
     @app.route('/config', methods=['GET'])
     def get_config():
@@ -254,10 +376,7 @@ def make_web():
     @app.route('/update', methods=['GET'])
     def get_update():
         project_root = GlobalConfigs.instance().project_root
-        modules_zip_path = os.path.join(project_root, "modules.zip")
-        modules_zip_file = Path(modules_zip_path)
-        if not modules_zip_file.is_file():
-            GlobalConfigs.instance().gen_update()
+        GlobalConfigs.instance().gen_update()
         response = send_from_directory(directory=project_root, filename='modules.zip')
         response.headers['last_update_time'] = GlobalConfigs.instance().last_update_time
         return response
@@ -305,32 +424,7 @@ def make_web():
         logout_user()
         return redirect(url_for('login'))
 
-    @app.route('/test_video')
-    def test_video():
-
-        return Response(test_gen(request.args.get('stream_id')), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-    def test_gen(stream_id):
-        if stream_id is not None and stream_id != '1':
-            url = 'https://www.youtube.com/watch?v=Q0avX5iA4As'
-        else:
-            url = 'https://www.youtube.com/watch?v=YJerlcRThB8'
-        cam = pafy_to_stream(url)
-        fps = cam.get(cv2.CAP_PROP_FPS)
-        _, frame = cam.read()
-        while frame is not None:
-            _, frame = cv2.imencode('.JPEG', frame)
-
-            yield (b'--frame\r\n'
-                   b'Content-Type:image/jpeg\r\n'
-                   b'Content-Length: ' + f"{len(frame)}".encode() + b'\r\n'
-                                                                    b'\r\n' + frame.tostring() + b'\r\n')
-
-            sleep(1 / fps)
-            _, frame = cam.read()
-        yield b'--\r\n'
-
-    app.run(host='0.0.0.0', port=GlobalConfigs.instance().get_port(), threaded=True)
+    socketio.run(app, host='0.0.0.0', port=GlobalConfigs.instance().get_port())
 
 
 class User(UserMixin):

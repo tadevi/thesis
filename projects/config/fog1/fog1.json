@@ -1,11 +1,5 @@
 {
   "start_up": [
-    {
-      "name": "traffic_camera",
-      "url": "https://youtu.be/NQ7wIithY-4",
-      "camera_id": "0",
-      "demo": "true"
-    }
   ],
   "database": {
     "mongo_url": "mongodb://localhost:27017/",
